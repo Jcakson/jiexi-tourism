@@ -1,0 +1,1949 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>揭西县游客画像驱动旅游路线 Demo</title>
+
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+}
+
+/* =========================
+   左侧控制面板
+========================= */
+
+.panel {
+
+    position: absolute;
+    z-index: 1000;
+
+    top: 12px;
+    left: 12px;
+
+    width: 340px;
+    max-height: calc(100vh - 30px);
+
+    overflow-y: auto;
+
+    background: rgba(255,255,255,.96);
+
+    padding: 16px 18px;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 3px 15px rgba(0,0,0,.20);
+
+    font-family:
+        Arial,
+        "Microsoft YaHei",
+        sans-serif;
+
+    line-height: 1.55;
+}
+
+.panel h2 {
+    margin: 0 0 4px 0;
+}
+
+.panel h3 {
+    margin: 14px 0 7px 0;
+}
+
+/* =========================
+   画像按钮
+========================= */
+
+button {
+
+    border: 0;
+
+    padding: 7px 11px;
+
+    margin: 3px;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    background: #eeeeee;
+
+    transition: .15s;
+}
+
+button:hover {
+    background: #dddddd;
+}
+
+button.active {
+
+    background: #333;
+
+    color: white;
+}
+
+/* =========================
+   下拉框
+========================= */
+
+select {
+
+    width: 100%;
+
+    padding: 8px;
+
+    margin-top: 4px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 6px;
+
+    background: white;
+}
+
+/* =========================
+   推荐结果
+========================= */
+
+.result-box {
+
+    margin-top: 12px;
+
+    padding: 10px;
+
+    background: #f7f7f7;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+}
+
+.day-box {
+
+    margin-top: 10px;
+
+    padding: 9px;
+
+    background: white;
+
+    border-left: 4px solid #333;
+
+    border-radius: 5px;
+
+    box-shadow: 0 1px 5px rgba(0,0,0,.08);
+}
+
+.day-title {
+
+    font-weight: bold;
+
+    margin-bottom: 5px;
+}
+
+/* =========================
+   图例
+========================= */
+
+.legend {
+
+    margin-top: 12px;
+
+    font-size: 12px;
+}
+
+.legend-row {
+
+    margin: 4px 0;
+}
+
+.legend-dot {
+
+    display: inline-block;
+
+    width: 12px;
+    height: 12px;
+
+    border-radius: 50%;
+
+    margin-right: 5px;
+
+    vertical-align: middle;
+}
+
+/* =========================
+   提示
+========================= */
+
+.note {
+
+    font-size: 11px;
+
+    color: #666;
+
+    margin-top: 12px;
+
+    line-height: 1.5;
+}
+
+/* =========================
+   Leaflet tooltip
+========================= */
+
+.node-tooltip {
+
+    min-width: 230px;
+
+    font-family:
+        Arial,
+        "Microsoft YaHei",
+        sans-serif;
+
+    line-height: 1.55;
+}
+
+.node-tooltip h4 {
+
+    margin: 0 0 5px 0;
+
+    font-size: 15px;
+}
+
+.tag {
+
+    display: inline-block;
+
+    background: #eee;
+
+    padding: 2px 5px;
+
+    border-radius: 4px;
+
+    margin: 2px;
+
+    font-size: 11px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="map"></div>
+
+
+<!-- =====================================================
+     控制面板
+====================================================== -->
+
+<div class="panel">
+
+<h2>揭西县旅游路线 Demo</h2>
+
+<div style="font-size:13px;color:#666;">
+游客画像驱动的智能旅游路线推荐
+</div>
+
+
+<!-- ================= 游客画像 ================= -->
+
+<h3>① 选择游客画像</h3>
+
+<div>
+
+<button id="b1"
+        class="active"
+        onclick="setProfile('culture')">
+文化体验型
+</button>
+
+<button id="b2"
+        onclick="setProfile('eco')">
+生态休闲型
+</button>
+
+<button id="b3"
+        onclick="setProfile('food')">
+美食娱乐型
+</button>
+
+<button id="b4"
+        onclick="setProfile('cycling')">
+骑行 / 小众
+</button>
+
+</div>
+
+
+<!-- ================= 游玩时间 ================= -->
+
+<h3>② 选择游玩计划</h3>
+
+<select id="duration"
+        onchange="generateRoute()">
+
+<option value="1">
+一天
+</option>
+
+<option value="2">
+两天一夜
+</option>
+
+<option value="3">
+三天两夜
+</option>
+
+</select>
+
+
+<!-- ================= 推荐信息 ================= -->
+
+<div id="profileInfo"
+     class="result-box">
+</div>
+
+
+<!-- ================= 路线信息 ================= -->
+
+<div id="routeInfo"
+     class="result-box">
+</div>
+
+
+<!-- ================= 图例 ================= -->
+
+<div class="legend">
+
+<h3>地图图例</h3>
+
+<div class="legend-row">
+<span class="legend-dot"
+      style="background:#d33"></span>
+核心景区
+</div>
+
+<div class="legend-row">
+<span class="legend-dot"
+      style="background:#2e8b57"></span>
+生态 / 山水
+</div>
+
+<div class="legend-row">
+<span class="legend-dot"
+      style="background:#e69500"></span>
+文化 / 美食
+</div>
+
+<div class="legend-row">
+<span class="legend-dot"
+      style="background:#8a4fff"></span>
+小众 / 骑行
+</div>
+
+<div class="legend-row">
+<span class="legend-dot"
+      style="background:#1769aa"></span>
+住宿节点
+</div>
+
+</div>
+
+
+<div class="note">
+
+地图底图：
+OpenStreetMap
+
+<br>
+
+路线：
+优先调用 OSRM 实际道路网络。
+
+<br>
+
+提示：
+鼠标移动到旅游节点上，
+可查看该地点的特色美食、活动、
+土特产及其他旅游属性。
+
+<br><br>
+
+当前 Demo 使用示范数据。
+正式项目建议直接读取
+“揭西旅游资源综合数据库”。
+
+</div>
+
+</div>
+
+
+<script
+src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script>
+
+/* =====================================================
+   1. 揭西旅游资源综合数据库
+=====================================================
+
+以后可以直接替换成：
+
+const places = [...]
+
+或者从 CSV / JSON 加载。
+
+*/
+
+
+const places = {
+
+
+/* =========================
+   城区 / 交通节点
+========================= */
+
+"河婆城区": {
+
+    coord: [23.431410,115.842520],
+
+    type: "交通 / 城区",
+
+    category: "culture",
+
+    role: ["交通节点","住宿节点","美食节点"],
+
+    food: "揭西特色小吃",
+
+    activity: "县城休闲、夜间消费",
+
+    product: "揭西土特产",
+
+    stay: true,
+
+    time: "2–4小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 4
+
+},
+
+
+/* =========================
+   黄满寨
+========================= */
+
+"黄满寨瀑布群": {
+
+    coord: [23.581222,115.985307],
+
+    type: "山水 / 生态",
+
+    category: "eco",
+
+    role: ["核心景点","自然节点"],
+
+    food: "",
+
+    activity: "瀑布观赏、山地游览",
+
+    product: "",
+
+    stay: false,
+
+    time: "2–3小时",
+
+    fitness: "中",
+
+    family: true,
+
+    season: "春夏秋",
+
+    popularity: 5
+
+},
+
+
+/* =========================
+   京明
+========================= */
+
+"京明温泉度假村": {
+
+    coord: [23.505361,116.046389],
+
+    type: "温泉 / 休闲",
+
+    category: "eco",
+
+    role: ["核心景点","住宿节点","亲子节点"],
+
+    food: "客家特色菜、度假区餐饮",
+
+    activity: "温泉、动物园、儿童活动、休闲度假",
+
+    product: "茶叶、地方土特产",
+
+    stay: true,
+
+    time: "半天–1天",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 5
+
+},
+
+
+/* =========================
+   云汤山
+========================= */
+
+"云汤山温泉": {
+
+    coord: [23.525,116.030],
+
+    type: "温泉 / 休闲",
+
+    category: "eco",
+
+    role: ["休闲节点","住宿节点"],
+
+    food: "",
+
+    activity: "温泉休闲",
+
+    product: "",
+
+    stay: true,
+
+    time: "3–5小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "秋冬最佳",
+
+    popularity: 4
+
+},
+
+
+/* =========================
+   大洋
+========================= */
+
+"大洋国际生态旅游区": {
+
+    coord: [23.629525,116.018366],
+
+    type: "山地 / 生态",
+
+    category: "eco",
+
+    role: ["核心景点","生态节点"],
+
+    food: "",
+
+    activity: "山地观光、生态休闲",
+
+    product: "",
+
+    stay: false,
+
+    time: "半天",
+
+    fitness: "中",
+
+    family: true,
+
+    season: "春夏秋",
+
+    popularity: 4
+
+},
+
+
+/* =========================
+   大北山
+========================= */
+
+"大北山森林公园": {
+
+    coord: [23.496681,115.952839],
+
+    type: "森林 / 生态",
+
+    category: "eco",
+
+    role: ["自然节点","户外节点"],
+
+    food: "",
+
+    activity: "森林徒步、生态观光",
+
+    product: "",
+
+    stay: false,
+
+    time: "半天–1天",
+
+    fitness: "中–高",
+
+    family: false,
+
+    season: "春秋",
+
+    popularity: 4
+
+},
+
+
+/* =========================
+   黄龙寺
+========================= */
+
+"黄龙寺": {
+
+    coord: [23.56,115.96],
+
+    type: "宗教 / 文化",
+
+    category: "culture",
+
+    role: ["文化节点","打卡节点"],
+
+    food: "",
+
+    activity: "寺庙参观、文化体验",
+
+    product: "",
+
+    stay: false,
+
+    time: "1–2小时",
+
+    fitness: "中",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 4
+
+},
+
+
+/* =========================
+   火炬村
+========================= */
+
+"火炬村": {
+
+    coord: [23.49,115.90],
+
+    type: "红色历史 / 乡村 / 非遗",
+
+    category: "cycling",
+
+    role: [
+        "红色节点",
+        "乡村节点",
+        "非遗节点",
+        "交通节点"
+    ],
+
+    food: "",
+
+    activity: "红色教育、乡村体验、非遗活动",
+
+    product: "地方土特产",
+
+    stay: false,
+
+    time: "2–4小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 4
+
+},
+
+
+/* =========================
+   元合酱园
+========================= */
+
+"元合酱园": {
+
+    coord: [23.45,115.91],
+
+    type: "非遗 / 美食",
+
+    category: "food",
+
+    role: [
+        "非遗节点",
+        "体验节点",
+        "购物节点"
+    ],
+
+    food: "传统酱料及地方风味",
+
+    activity: "非遗制作技艺体验",
+
+    product: "传统酱料、地方土特产",
+
+    stay: false,
+
+    time: "1–2小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 3
+
+},
+
+
+/* =========================
+   清元洞
+========================= */
+
+"金山清元洞公园": {
+
+    coord: [23.52,116.08],
+
+    type: "生态 / 亲子 / 玩水",
+
+    category: "cycling",
+
+    role: [
+        "亲子节点",
+        "小众节点",
+        "休闲节点"
+    ],
+
+    food: "",
+
+    activity: "亲子戏水、自然休闲",
+
+    product: "",
+
+    stay: false,
+
+    time: "2–4小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "春夏",
+
+    popularity: 2
+
+},
+
+
+/* =========================
+   棉湖
+========================= */
+
+"棉湖古镇": {
+
+    coord: [23.442421,116.134486],
+
+    type: "古镇 / 民俗 / 美食",
+
+    category: "food",
+
+    role: [
+        "文化节点",
+        "美食节点",
+        "夜游节点"
+    ],
+
+    food: "肉脯、刨冰、油柑、潮汕火锅、无米粿",
+
+    activity: "古镇漫游、灯谜、潮剧、民俗活动",
+
+    product: "地方食品、传统小吃",
+
+    stay: true,
+
+    time: "半天",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 5
+
+},
+
+
+/* =========================
+   郭氏大楼
+========================= */
+
+"郭氏大楼": {
+
+    coord: [23.443,116.133],
+
+    type: "历史建筑",
+
+    category: "culture",
+
+    role: ["文化节点","建筑打卡"],
+
+    food: "",
+
+    activity: "历史建筑参观",
+
+    product: "",
+
+    stay: false,
+
+    time: "1小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 3
+
+},
+
+
+/* =========================
+   永昌古庙
+========================= */
+
+"永昌古庙": {
+
+    coord: [23.4435,116.135],
+
+    type: "传统文化",
+
+    category: "culture",
+
+    role: ["文化节点","民俗节点"],
+
+    food: "",
+
+    activity: "民俗文化体验、庙宇参观",
+
+    product: "",
+
+    stay: false,
+
+    time: "1小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 3
+
+},
+
+
+/* =========================
+   南山村
+========================= */
+
+"南山村": {
+
+    coord: [23.48,115.89],
+
+    type: "乡村 / 美食",
+
+    category: "cycling",
+
+    role: ["乡村节点","美食节点"],
+
+    food: "包粄",
+
+    activity: "乡村漫游",
+
+    product: "地方土特产",
+
+    stay: false,
+
+    time: "1–2小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 2
+
+},
+
+
+/* =========================
+   大溪镇
+========================= */
+
+"大溪镇": {
+
+    coord: [23.48,116.12],
+
+    type: "乡村 / 民俗 / 美食",
+
+    category: "food",
+
+    role: ["美食节点","非遗节点","乡村节点"],
+
+    food: "饺面",
+
+    activity: "民俗文化、祭典活动",
+
+    product: "地方土特产",
+
+    stay: false,
+
+    time: "2–3小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 3
+
+},
+
+
+/* =========================
+   三山国王祖庙
+========================= */
+
+"三山国王祖庙": {
+
+    coord: [23.46,116.10],
+
+    type: "民俗 / 非遗",
+
+    category: "culture",
+
+    role: ["非遗节点","文化节点"],
+
+    food: "",
+
+    activity: "三山国王祖庙祭典",
+
+    product: "",
+
+    stay: false,
+
+    time: "1–2小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 5
+
+},
+
+
+/* =========================
+   粗坑村
+========================= */
+
+"粗坑村": {
+
+    coord: [23.55,115.92],
+
+    type: "历史村落 / 乡村",
+
+    category: "cycling",
+
+    role: ["乡村节点","小众节点","文化节点"],
+
+    food: "",
+
+    activity: "古村漫游、乡村体验",
+
+    product: "地方农产品",
+
+    stay: false,
+
+    time: "2–3小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "全年",
+
+    popularity: 2
+
+},
+
+
+/* =========================
+   山湖村
+========================= */
+
+"山湖村": {
+
+    coord: [23.54,115.94],
+
+    type: "乡村 / 生态",
+
+    category: "cycling",
+
+    role: ["乡村节点","生态节点","小众节点"],
+
+    food: "",
+
+    activity: "乡村休闲、生态体验",
+
+    product: "地方农产品",
+
+    stay: false,
+
+    time: "2小时",
+
+    fitness: "低",
+
+    family: true,
+
+    season: "春秋",
+
+    popularity: 2
+
+}
+
+};
+
+
+/* =====================================================
+   2. 游客画像
+===================================================== */
+
+const profiles = {
+
+culture: {
+
+    name: "文化体验型",
+
+    description:
+        "偏好历史文化、非遗、古镇、传统建筑和民俗活动。",
+
+    keywords: [
+        "文化节点",
+        "非遗节点",
+        "红色节点",
+        "民俗节点"
+    ],
+
+    avoidLarge: false
+
+},
+
+eco: {
+
+    name: "生态休闲型",
+
+    description:
+        "偏好瀑布、森林、温泉、山地和自然生态资源。",
+
+    keywords: [
+        "自然节点",
+        "生态节点",
+        "核心景点",
+        "休闲节点"
+    ],
+
+    avoidLarge: false
+
+},
+
+food: {
+
+    name: "美食娱乐型",
+
+    description:
+        "偏好地方特色美食、古镇、美食街区、夜游和娱乐。",
+
+    keywords: [
+        "美食节点",
+        "夜游节点",
+        "体验节点",
+        "购物节点"
+    ],
+
+    avoidLarge: false
+
+},
+
+cycling: {
+
+    name: "骑行 / 小众探索型",
+
+    description:
+        "主动避开大型景区，更偏好乡村、非遗、小众自然资源和地方生活。",
+
+    keywords: [
+        "乡村节点",
+        "小众节点",
+        "非遗节点",
+        "美食节点"
+    ],
+
+    avoidLarge: true
+
+}
+
+};
+
+
+/* =====================================================
+   3. 地图
+===================================================== */
+
+const map = L.map("map")
+    .setView([23.52,116.00],11);
+
+
+L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+
+        maxZoom:18,
+
+        attribution:
+            "&copy; OpenStreetMap contributors"
+
+    }
+).addTo(map);
+
+
+/* =====================================================
+   4. 图标
+===================================================== */
+
+const icons = {
+
+    core: L.divIcon({
+        className:"",
+        html:
+        '<div style="' +
+        'width:18px;height:18px;' +
+        'background:#d33;' +
+        'border-radius:50%;' +
+        'border:3px solid white;' +
+        'box-shadow:0 1px 5px #555' +
+        '"></div>'
+    }),
+
+    eco: L.divIcon({
+        className:"",
+        html:
+        '<div style="' +
+        'width:18px;height:18px;' +
+        'background:#2e8b57;' +
+        'border-radius:50%;' +
+        'border:3px solid white;' +
+        'box-shadow:0 1px 5px #555' +
+        '"></div>'
+    }),
+
+    culture: L.divIcon({
+        className:"",
+        html:
+        '<div style="' +
+        'width:18px;height:18px;' +
+        'background:#e69500;' +
+        'border-radius:50%;' +
+        'border:3px solid white;' +
+        'box-shadow:0 1px 5px #555' +
+        '"></div>'
+    }),
+
+    small: L.divIcon({
+        className:"",
+        html:
+        '<div style="' +
+        'width:18px;height:18px;' +
+        'background:#8a4fff;' +
+        'border-radius:50%;' +
+        'border:3px solid white;' +
+        'box-shadow:0 1px 5px #555' +
+        '"></div>'
+    }),
+
+    stay: L.divIcon({
+        className:"",
+        html:
+        '<div style="' +
+        'width:25px;height:25px;' +
+        'background:#1769aa;' +
+        'color:white;' +
+        'border-radius:50%;' +
+        'border:3px solid white;' +
+        'display:flex;' +
+        'align-items:center;' +
+        'justify-content:center;' +
+        'font-size:14px;' +
+        'box-shadow:0 1px 5px #555' +
+        '">住</div>'
+    })
+
+};
+
+
+/* =====================================================
+   5. 建立所有旅游节点
+===================================================== */
+
+const markers = {};
+
+
+function getIcon(place) {
+
+    if(place.stay)
+        return icons.stay;
+
+    if(place.category === "cycling")
+        return icons.small;
+
+    if(place.category === "eco")
+        return icons.eco;
+
+    if(place.category === "food")
+        return icons.culture;
+
+    return icons.culture;
+}
+
+
+Object.keys(places).forEach(name => {
+
+    const p = places[name];
+
+    const marker =
+        L.marker(
+            p.coord,
+            {icon:getIcon(p)}
+        )
+        .addTo(map);
+
+
+    /* ============================================
+       鼠标移动到节点才显示信息
+    ============================================ */
+
+    let html =
+
+        '<div class="node-tooltip">' +
+
+        '<h4>' + name + '</h4>' +
+
+        '<div>' +
+        '<span class="tag">' +
+        p.type +
+        '</span>' +
+        '</div>';
+
+
+    if(p.food) {
+
+        html +=
+        '<b>🍜 独特美食：</b>' +
+        p.food +
+        '<br>';
+
+    }
+
+
+    if(p.activity) {
+
+        html +=
+        '<b>🎭 活动：</b>' +
+        p.activity +
+        '<br>';
+
+    }
+
+
+    if(p.product) {
+
+        html +=
+        '<b>🛍 土特产：</b>' +
+        p.product +
+        '<br>';
+
+    }
+
+
+    html +=
+
+        '<b>⏱ 建议游玩：</b>' +
+        p.time +
+        '<br>' +
+
+        '<b>💪 体力：</b>' +
+        p.fitness +
+        '<br>' +
+
+        '<b>👨‍👩‍👧 亲子：</b>' +
+        (p.family ? "适合" : "一般") +
+        '<br>' +
+
+        '<b>🌿 最佳季节：</b>' +
+        p.season;
+
+
+    if(p.stay) {
+
+        html +=
+        '<br><b>🛏 住宿：</b>可作为过夜节点';
+
+    }
+
+
+    html += '</div>';
+
+
+    marker.bindTooltip(
+        html,
+        {
+            direction:"top",
+            sticky:true,
+            opacity:.96
+        }
+    );
+
+
+    markers[name] = marker;
+
+});
+
+
+/* =====================================================
+   6. 路线规划
+===================================================== */
+
+const routeTemplates = {
+
+
+culture: {
+
+    1: [
+        ["河婆城区","棉湖古镇","郭氏大楼","永昌古庙"]
+    ],
+
+    2: [
+        ["河婆城区","火炬村","棉湖古镇","郭氏大楼"],
+        ["棉湖古镇","三山国王祖庙","河婆城区"]
+    ],
+
+    3: [
+        ["河婆城区","火炬村","黄龙寺","棉湖古镇"],
+        ["棉湖古镇","郭氏大楼","永昌古庙","三山国王祖庙"],
+        ["三山国王祖庙","大溪镇","河婆城区"]
+    ]
+
+},
+
+
+eco: {
+
+    1: [
+        ["河婆城区","大北山森林公园","黄满寨瀑布群"]
+    ],
+
+    2: [
+        ["河婆城区","大北山森林公园","黄满寨瀑布群"],
+        ["黄满寨瀑布群","京明温泉度假村"]
+    ],
+
+    3: [
+        ["河婆城区","大北山森林公园","黄满寨瀑布群"],
+        ["黄满寨瀑布群","京明温泉度假村","云汤山温泉"],
+        ["云汤山温泉","大洋国际生态旅游区","河婆城区"]
+    ]
+
+},
+
+
+food: {
+
+    1: [
+        ["河婆城区","棉湖古镇","郭氏大楼"]
+    ],
+
+    2: [
+        ["河婆城区","棉湖古镇","元合酱园"],
+        ["元合酱园","京明温泉度假村"]
+    ],
+
+    3: [
+        ["河婆城区","元合酱园","棉湖古镇"],
+        ["棉湖古镇","大溪镇","三山国王祖庙"],
+        ["三山国王祖庙","京明温泉度假村","河婆城区"]
+    ]
+
+},
+
+
+/* =================================================
+   骑行 / 小众
+
+   特意不使用大型核心景区
+================================================= */
+
+cycling: {
+
+    1: [
+        ["河婆城区","火炬村","南山村","金山清元洞公园"]
+    ],
+
+    2: [
+        ["河婆城区","火炬村","南山村"],
+        ["南山村","粗坑村","山湖村","河婆城区"]
+    ],
+
+    3: [
+        ["河婆城区","火炬村","南山村"],
+        ["南山村","粗坑村","山湖村"],
+        ["山湖村","金山清元洞公园","元合酱园","河婆城区"]
+    ]
+
+}
+
+};
+
+
+/* =====================================================
+   7. 路线状态
+===================================================== */
+
+let routeLayers = [];
+
+let routeToken = 0;
+
+let currentProfile = "culture";
+
+
+function clearRoutes() {
+
+    routeLayers.forEach(
+        layer => map.removeLayer(layer)
+    );
+
+    routeLayers = [];
+
+}
+
+
+/* =====================================================
+   8. 画像按钮
+===================================================== */
+
+function setProfile(profile) {
+
+    currentProfile = profile;
+
+
+    [
+        "b1",
+        "b2",
+        "b3",
+        "b4"
+    ].forEach(id => {
+
+        document
+            .getElementById(id)
+            .classList.remove("active");
+
+    });
+
+
+    const buttonMap = {
+
+        culture:"b1",
+
+        eco:"b2",
+
+        food:"b3",
+
+        cycling:"b4"
+
+    };
+
+
+    document
+        .getElementById(
+            buttonMap[profile]
+        )
+        .classList.add("active");
+
+
+    const p = profiles[profile];
+
+
+    document.getElementById(
+        "profileInfo"
+    ).innerHTML =
+
+        "<b>当前游客画像：</b>" +
+        p.name +
+
+        "<br>" +
+
+        "<span style='color:#666'>" +
+        p.description +
+        "</span>";
+
+
+    generateRoute();
+
+}
+
+
+/* =====================================================
+   9. OSRM 道路路线
+===================================================== */
+
+async function getRoadRoute(
+    coords,
+    day,
+    color,
+    token
+) {
+
+    const coordString =
+        coords
+        .map(
+            p => p[1] + "," + p[0]
+        )
+        .join(";");
+
+
+    const url =
+        "https://router.project-osrm.org/route/v1/driving/" +
+        coordString +
+        "?overview=full&geometries=geojson";
+
+
+    try {
+
+        const response =
+            await fetch(url);
+
+
+        if(!response.ok)
+            throw new Error("OSRM error");
+
+
+        const data =
+            await response.json();
+
+
+        if(token !== routeToken)
+            return;
+
+
+        if(
+            data.code === "Ok" &&
+            data.routes.length > 0
+        ) {
+
+            const route =
+                data.routes[0];
+
+
+            const latlngs =
+                route.geometry.coordinates.map(
+                    p => [p[1],p[0]]
+                );
+
+
+            const line =
+                L.polyline(
+                    latlngs,
+                    {
+                        color:color,
+                        weight:6,
+                        opacity:.85
+                    }
+                )
+                .addTo(map);
+
+
+            line.bindPopup(
+
+                "<b>" +
+                day +
+                "</b><br>" +
+
+                "道路距离：" +
+                (route.distance/1000)
+                    .toFixed(1) +
+                " km<br>" +
+
+                "驾车时间：" +
+                Math.round(
+                    route.duration/60
+                ) +
+                " 分钟"
+
+            );
+
+
+            routeLayers.push(line);
+
+
+        } else {
+
+            drawFallback(
+                coords,
+                color
+            );
+
+        }
+
+
+    } catch(error) {
+
+        drawFallback(
+            coords,
+            color
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   10. 无网络路线时的备用线
+===================================================== */
+
+function drawFallback(
+    coords,
+    color
+) {
+
+    const line =
+        L.polyline(
+            coords,
+            {
+                color:color,
+                weight:5,
+                opacity:.75,
+                dashArray:"8,8"
+            }
+        )
+        .addTo(map);
+
+
+    routeLayers.push(line);
+
+}
+
+
+/* =====================================================
+   11. 自动生成路线
+===================================================== */
+
+function generateRoute() {
+
+    routeToken++;
+
+    const token =
+        routeToken;
+
+
+    clearRoutes();
+
+
+    const days =
+        parseInt(
+            document.getElementById(
+                "duration"
+            ).value
+        );
+
+
+    const routes =
+        routeTemplates[
+            currentProfile
+        ][days];
+
+
+    if(!routes)
+        return;
+
+
+    let info = "";
+
+
+    info +=
+        "<b>" +
+        profiles[currentProfile].name +
+        "</b><br>";
+
+
+    info +=
+        "旅行计划：";
+
+
+    if(days === 1)
+        info += "一天";
+
+    if(days === 2)
+        info += "两天一夜";
+
+    if(days === 3)
+        info += "三天两夜";
+
+
+    info += "<br><br>";
+
+
+    /* =========================
+       每一天
+    ========================= */
+
+    routes.forEach(
+        (day,index) => {
+
+            const dayName =
+                "Day " + (index + 1);
+
+
+            info +=
+                "<div class='day-box'>" +
+
+                "<div class='day-title'>" +
+                dayName +
+                "</div>";
+
+
+            day.forEach(
+                (place,index2) => {
+
+                    info +=
+                        (index2 + 1) +
+                        ". " +
+                        place;
+
+
+                    if(
+                        places[place].stay
+                    ) {
+
+                        info +=
+                            " 🛏";
+
+                    }
+
+
+                    info += "<br>";
+
+                }
+            );
+
+
+            /* =====================
+               过夜判断
+            ===================== */
+
+            if(days > 1 && index < days-1) {
+
+                let overnight = null;
+
+
+                for(
+                    let i=day.length-1;
+                    i>=0;
+                    i--
+                ) {
+
+                    const name =
+                        day[i];
+
+
+                    if(
+                        places[name].stay
+                    ) {
+
+                        overnight =
+                            name;
+
+                        break;
+
+                    }
+
+                }
+
+
+                if(overnight) {
+
+                    info +=
+                        "<br>" +
+
+                        "🛏 <b>推荐过夜：</b>" +
+
+                        overnight;
+
+                } else {
+
+                    info +=
+                        "<br>" +
+
+                        "🛏 <b>建议：</b>" +
+
+                        "返回城区或附近住宿节点";
+
+                }
+
+            }
+
+
+            info +=
+                "</div>";
+
+        }
+    );
+
+
+    document.getElementById(
+        "routeInfo"
+    ).innerHTML = info;
+
+
+    /* =================================================
+       绘制路线
+    ================================================= */
+
+    const colors = [
+        "#b22222",
+        "#1f5f99",
+        "#6a3d9a"
+    ];
+
+
+    routes.forEach(
+        (day,index) => {
+
+            const coords =
+                day.map(
+                    name =>
+                    places[name].coord
+                );
+
+
+            getRoadRoute(
+                coords,
+                "Day " + (index+1),
+                colors[index],
+                token
+            );
+
+        }
+    );
+
+
+    /* =================================================
+       自动缩放地图
+    ================================================= */
+
+    const all = [];
+
+
+    routes.forEach(
+        day => {
+
+            day.forEach(
+                name => {
+
+                    all.push(
+                        places[name].coord
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    if(all.length > 0) {
+
+        map.fitBounds(
+            all,
+            {
+                padding:[
+                    60,
+                    60
+                ]
+            }
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   12. 初始化
+===================================================== */
+
+setProfile("culture");
+
+</script>
+
+</body>
+</html>
+```
