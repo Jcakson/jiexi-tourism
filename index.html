@@ -1,300 +1,825 @@
 ```html
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
 
 <title>揭西县游客画像驱动旅游路线 Demo</title>
 
 <link rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
+
 <style>
 
-html, body {
+/* =====================================================
+   基础设置
+===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
     height: 100%;
     margin: 0;
+    padding: 0;
+    overflow: hidden;
 }
+
+body {
+
+    font-family:
+        Arial,
+        "Microsoft YaHei",
+        sans-serif;
+
+    background: #eee;
+}
+
+
+/* =====================================================
+   地图
+===================================================== */
 
 #map {
-    height: 100%;
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
     width: 100%;
+    height: 100%;
+
+    z-index: 1;
 }
 
-/* =========================
+
+/* =====================================================
    左侧控制面板
-========================= */
+===================================================== */
 
 .panel {
 
     position: absolute;
+
     z-index: 1000;
 
     top: 12px;
     left: 12px;
 
     width: 340px;
-    max-height: calc(100vh - 30px);
+
+    max-width:
+        calc(100vw - 24px);
+
+    max-height:
+        calc(100vh - 24px);
 
     overflow-y: auto;
+    overflow-x: hidden;
 
-    background: rgba(255,255,255,.96);
+    background:
+        rgba(255,255,255,.96);
 
-    padding: 16px 18px;
+    padding:
+        16px 18px;
 
     border-radius: 12px;
 
     box-shadow:
-        0 3px 15px rgba(0,0,0,.20);
-
-    font-family:
-        Arial,
-        "Microsoft YaHei",
-        sans-serif;
+        0 3px 15px
+        rgba(0,0,0,.20);
 
     line-height: 1.55;
+
+    -webkit-overflow-scrolling:
+        touch;
 }
 
+
+/* =====================================================
+   标题
+===================================================== */
+
 .panel h2 {
-    margin: 0 0 4px 0;
+
+    margin:
+        0 0 4px 0;
+
+    font-size: 22px;
+
+    line-height: 1.3;
 }
 
 .panel h3 {
-    margin: 14px 0 7px 0;
+
+    margin:
+        14px 0 7px 0;
+
+    font-size: 15px;
+
+    line-height: 1.3;
 }
 
-/* =========================
-   画像按钮
-========================= */
+
+/* =====================================================
+   游客画像按钮
+===================================================== */
 
 button {
 
     border: 0;
 
-    padding: 7px 11px;
+    padding:
+        8px 11px;
 
-    margin: 3px;
+    margin:
+        3px;
 
     border-radius: 7px;
 
     cursor: pointer;
 
-    background: #eeeeee;
+    background:
+        #eeeeee;
 
-    transition: .15s;
+    transition:
+        .15s;
+
+    font-size: 14px;
+
+    min-height: 36px;
+
+    -webkit-tap-highlight-color:
+        transparent;
 }
 
 button:hover {
-    background: #dddddd;
+
+    background:
+        #dddddd;
+}
+
+button:active {
+
+    transform:
+        scale(.97);
 }
 
 button.active {
 
-    background: #333;
+    background:
+        #333;
 
-    color: white;
+    color:
+        white;
 }
 
-/* =========================
+
+/* =====================================================
    下拉框
-========================= */
+===================================================== */
 
 select {
 
     width: 100%;
 
-    padding: 8px;
+    min-height: 42px;
+
+    padding:
+        8px 10px;
 
     margin-top: 4px;
 
-    border: 1px solid #ccc;
+    border:
+        1px solid #ccc;
 
-    border-radius: 6px;
+    border-radius: 7px;
 
-    background: white;
+    background:
+        white;
+
+    font-size: 15px;
+
+    outline: none;
 }
 
-/* =========================
+
+/* =====================================================
    推荐结果
-========================= */
+===================================================== */
 
 .result-box {
 
-    margin-top: 12px;
+    margin-top:
+        12px;
 
-    padding: 10px;
+    padding:
+        10px;
 
-    background: #f7f7f7;
+    background:
+        #f7f7f7;
 
-    border-radius: 8px;
+    border-radius:
+        8px;
 
-    font-size: 13px;
+    font-size:
+        13px;
+
+    overflow-wrap:
+        break-word;
 }
+
 
 .day-box {
 
-    margin-top: 10px;
+    margin-top:
+        10px;
 
-    padding: 9px;
+    padding:
+        9px;
 
-    background: white;
+    background:
+        white;
 
-    border-left: 4px solid #333;
+    border-left:
+        4px solid #333;
 
-    border-radius: 5px;
+    border-radius:
+        5px;
 
-    box-shadow: 0 1px 5px rgba(0,0,0,.08);
+    box-shadow:
+        0 1px 5px
+        rgba(0,0,0,.08);
 }
+
 
 .day-title {
 
-    font-weight: bold;
+    font-weight:
+        bold;
 
-    margin-bottom: 5px;
+    margin-bottom:
+        5px;
 }
 
-/* =========================
+
+/* =====================================================
    图例
-========================= */
+===================================================== */
 
 .legend {
 
-    margin-top: 12px;
+    margin-top:
+        12px;
 
-    font-size: 12px;
+    font-size:
+        12px;
 }
+
 
 .legend-row {
 
-    margin: 4px 0;
+    margin:
+        4px 0;
 }
+
 
 .legend-dot {
 
-    display: inline-block;
+    display:
+        inline-block;
 
-    width: 12px;
-    height: 12px;
+    width:
+        12px;
 
-    border-radius: 50%;
+    height:
+        12px;
 
-    margin-right: 5px;
+    border-radius:
+        50%;
 
-    vertical-align: middle;
+    margin-right:
+        5px;
+
+    vertical-align:
+        middle;
 }
 
-/* =========================
-   提示
-========================= */
+
+/* =====================================================
+   说明文字
+===================================================== */
 
 .note {
 
-    font-size: 11px;
+    font-size:
+        11px;
 
-    color: #666;
+    color:
+        #666;
 
-    margin-top: 12px;
+    margin-top:
+        12px;
 
-    line-height: 1.5;
+    line-height:
+        1.5;
 }
 
-/* =========================
-   Leaflet tooltip
-========================= */
+
+/* =====================================================
+   Leaflet Tooltip
+===================================================== */
 
 .node-tooltip {
 
-    min-width: 230px;
+    min-width:
+        230px;
+
+    max-width:
+        300px;
 
     font-family:
         Arial,
         "Microsoft YaHei",
         sans-serif;
 
-    line-height: 1.55;
+    line-height:
+        1.55;
 }
+
 
 .node-tooltip h4 {
 
-    margin: 0 0 5px 0;
+    margin:
+        0 0 5px 0;
 
-    font-size: 15px;
+    font-size:
+        15px;
 }
+
 
 .tag {
 
-    display: inline-block;
+    display:
+        inline-block;
 
-    background: #eee;
+    background:
+        #eee;
 
-    padding: 2px 5px;
+    padding:
+        2px 5px;
 
-    border-radius: 4px;
+    border-radius:
+        4px;
 
-    margin: 2px;
+    margin:
+        2px;
 
-    font-size: 11px;
+    font-size:
+        11px;
 }
+
+
+/* =====================================================
+   手机端
+===================================================== */
+
+@media screen and (max-width: 768px) {
+
+
+    /* ---------------------------------------------
+       页面
+    --------------------------------------------- */
+
+    html,
+    body {
+
+        overflow:
+            hidden;
+    }
+
+
+    /* ---------------------------------------------
+       地图
+    --------------------------------------------- */
+
+    #map {
+
+        width:
+            100%;
+
+        height:
+            100%;
+    }
+
+
+    /* ---------------------------------------------
+       手机端控制面板
+    --------------------------------------------- */
+
+    .panel {
+
+        top:
+            8px;
+
+        left:
+            8px;
+
+        width:
+            calc(100vw - 16px);
+
+        max-width:
+            none;
+
+        /*
+         * 只占手机上半部分，
+         * 下面留给地图
+         */
+
+        max-height:
+            46vh;
+
+        padding:
+            12px 14px;
+
+        border-radius:
+            12px;
+
+        overflow-y:
+            auto;
+
+        overflow-x:
+            hidden;
+
+        box-shadow:
+            0 2px 12px
+            rgba(0,0,0,.22);
+    }
+
+
+    /* ---------------------------------------------
+       手机端标题
+    --------------------------------------------- */
+
+    .panel h2 {
+
+        font-size:
+            18px;
+
+        margin-bottom:
+            2px;
+    }
+
+
+    .panel h3 {
+
+        font-size:
+            14px;
+
+        margin-top:
+            10px;
+
+        margin-bottom:
+            5px;
+    }
+
+
+    /* ---------------------------------------------
+       手机端按钮
+    --------------------------------------------- */
+
+    button {
+
+        font-size:
+            13px;
+
+        padding:
+            7px 9px;
+
+        min-height:
+            36px;
+
+        margin:
+            2px;
+    }
+
+
+    /* ---------------------------------------------
+       手机端下拉框
+    --------------------------------------------- */
+
+    select {
+
+        min-height:
+            40px;
+
+        font-size:
+            14px;
+    }
+
+
+    /* ---------------------------------------------
+       手机端推荐结果
+    --------------------------------------------- */
+
+    .result-box {
+
+        font-size:
+            12px;
+
+        padding:
+            8px;
+
+        margin-top:
+            8px;
+    }
+
+
+    .day-box {
+
+        padding:
+            8px;
+
+        margin-top:
+            7px;
+    }
+
+
+    /* ---------------------------------------------
+       手机端图例
+    --------------------------------------------- */
+
+    .legend {
+
+        margin-top:
+            8px;
+
+        font-size:
+            11px;
+    }
+
+
+    .legend-row {
+
+        display:
+            inline-block;
+
+        margin-right:
+            8px;
+
+        margin-top:
+            3px;
+    }
+
+
+    /* ---------------------------------------------
+       手机端说明
+    --------------------------------------------- */
+
+    .note {
+
+        font-size:
+            10px;
+
+        margin-top:
+            8px;
+    }
+
+
+    /* ---------------------------------------------
+       手机端 Leaflet 缩放按钮
+    --------------------------------------------- */
+
+    .leaflet-control-zoom {
+
+        margin-top:
+            10px !important;
+
+        margin-right:
+            8px !important;
+    }
+
+
+    .leaflet-control-zoom a {
+
+        width:
+            36px !important;
+
+        height:
+            36px !important;
+
+        line-height:
+            36px !important;
+
+        font-size:
+            20px !important;
+    }
+
+
+    /* ---------------------------------------------
+       手机端 Tooltip
+    --------------------------------------------- */
+
+    .node-tooltip {
+
+        min-width:
+            0;
+
+        width:
+            230px;
+
+        max-width:
+            72vw;
+
+        font-size:
+            12px;
+    }
+
+}
+
+
+/* =====================================================
+   超小屏手机
+===================================================== */
+
+@media screen and (max-width: 390px) {
+
+
+    .panel {
+
+        max-height:
+            44vh;
+
+        padding:
+            10px 12px;
+    }
+
+
+    .panel h2 {
+
+        font-size:
+            17px;
+    }
+
+
+    button {
+
+        font-size:
+            12px;
+
+        padding:
+            6px 8px;
+    }
+
+
+    .result-box {
+
+        font-size:
+            11px;
+    }
+
+}
+
+
+/* =====================================================
+   手机横屏
+===================================================== */
+
+@media screen
+       and (max-width: 900px)
+       and (orientation: landscape) {
+
+
+    .panel {
+
+        width:
+            320px;
+
+        max-height:
+            calc(100vh - 16px);
+
+        top:
+            8px;
+
+        left:
+            8px;
+    }
+
+}
+
 
 </style>
 
 </head>
 
+
 <body>
+
+
+<!-- =====================================================
+     地图
+===================================================== -->
 
 <div id="map"></div>
 
 
 <!-- =====================================================
      控制面板
-====================================================== -->
+===================================================== -->
 
 <div class="panel">
 
-<h2>揭西县旅游路线 Demo</h2>
 
-<div style="font-size:13px;color:#666;">
+<h2>
+揭西县旅游路线 Demo
+</h2>
+
+
+<div style="
+    font-size:13px;
+    color:#666;
+">
+
 游客画像驱动的智能旅游路线推荐
+
 </div>
 
 
-<!-- ================= 游客画像 ================= -->
+<!-- =================================================
+     游客画像
+================================================== -->
 
-<h3>① 选择游客画像</h3>
+<h3>
+① 选择游客画像
+</h3>
+
 
 <div>
 
-<button id="b1"
-        class="active"
-        onclick="setProfile('culture')">
+<button
+    id="b1"
+    class="active"
+    onclick="setProfile('culture')">
+
 文化体验型
+
 </button>
 
-<button id="b2"
-        onclick="setProfile('eco')">
+
+<button
+    id="b2"
+    onclick="setProfile('eco')">
+
 生态休闲型
+
 </button>
 
-<button id="b3"
-        onclick="setProfile('food')">
+
+<button
+    id="b3"
+    onclick="setProfile('food')">
+
 美食娱乐型
+
 </button>
 
-<button id="b4"
-        onclick="setProfile('cycling')">
+
+<button
+    id="b4"
+    onclick="setProfile('cycling')">
+
 骑行 / 小众
+
 </button>
 
 </div>
 
 
-<!-- ================= 游玩时间 ================= -->
+<!-- =================================================
+     游玩时间
+================================================== -->
 
-<h3>② 选择游玩计划</h3>
+<h3>
+② 选择游玩计划
+</h3>
 
-<select id="duration"
-        onchange="generateRoute()">
+
+<select
+    id="duration"
+    onchange="generateRoute()">
 
 <option value="1">
 一天
@@ -311,86 +836,145 @@ select {
 </select>
 
 
-<!-- ================= 推荐信息 ================= -->
+<!-- =================================================
+     游客画像信息
+================================================== -->
 
-<div id="profileInfo"
-     class="result-box">
+<div
+    id="profileInfo"
+    class="result-box">
 </div>
 
 
-<!-- ================= 路线信息 ================= -->
+<!-- =================================================
+     路线信息
+================================================== -->
 
-<div id="routeInfo"
-     class="result-box">
+<div
+    id="routeInfo"
+    class="result-box">
 </div>
 
 
-<!-- ================= 图例 ================= -->
+<!-- =================================================
+     地图图例
+================================================== -->
 
 <div class="legend">
 
-<h3>地图图例</h3>
+
+<h3>
+地图图例
+</h3>
+
 
 <div class="legend-row">
-<span class="legend-dot"
-      style="background:#d33"></span>
+
+<span
+    class="legend-dot"
+    style="background:#d33">
+</span>
+
 核心景区
+
 </div>
 
+
 <div class="legend-row">
-<span class="legend-dot"
-      style="background:#2e8b57"></span>
+
+<span
+    class="legend-dot"
+    style="background:#2e8b57">
+</span>
+
 生态 / 山水
+
 </div>
 
+
 <div class="legend-row">
-<span class="legend-dot"
-      style="background:#e69500"></span>
+
+<span
+    class="legend-dot"
+    style="background:#e69500">
+</span>
+
 文化 / 美食
+
 </div>
 
+
 <div class="legend-row">
-<span class="legend-dot"
-      style="background:#8a4fff"></span>
+
+<span
+    class="legend-dot"
+    style="background:#8a4fff">
+</span>
+
 小众 / 骑行
+
 </div>
+
 
 <div class="legend-row">
-<span class="legend-dot"
-      style="background:#1769aa"></span>
+
+<span
+    class="legend-dot"
+    style="background:#1769aa">
+</span>
+
 住宿节点
-</div>
 
 </div>
 
+
+</div>
+
+
+<!-- =================================================
+     说明
+================================================== -->
 
 <div class="note">
 
 地图底图：
 OpenStreetMap
 
-<br>
+<br><br>
 
 路线：
 优先调用 OSRM 实际道路网络。
 
+<br><br>
+
+电脑端：
+鼠标移动到旅游节点，
+可以查看详细信息。
+
 <br>
 
-提示：
-鼠标移动到旅游节点上，
-可查看该地点的特色美食、活动、
-土特产及其他旅游属性。
+手机端：
+点击旅游节点，
+可以查看详细信息。
 
 <br><br>
 
 当前 Demo 使用示范数据。
+
+<br>
+
 正式项目建议直接读取
 “揭西旅游资源综合数据库”。
 
 </div>
 
+
 </div>
 
+
+<!-- =====================================================
+     Leaflet
+===================================================== -->
 
 <script
 src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
@@ -399,25 +983,13 @@ src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
 
 <script>
 
+
 /* =====================================================
    1. 揭西旅游资源综合数据库
-=====================================================
-
-以后可以直接替换成：
-
-const places = [...]
-
-或者从 CSV / JSON 加载。
-
-*/
-
+===================================================== */
 
 const places = {
 
-
-/* =========================
-   城区 / 交通节点
-========================= */
 
 "河婆城区": {
 
@@ -427,13 +999,19 @@ const places = {
 
     category: "culture",
 
-    role: ["交通节点","住宿节点","美食节点"],
+    role: [
+        "交通节点",
+        "住宿节点",
+        "美食节点"
+    ],
 
     food: "揭西特色小吃",
 
-    activity: "县城休闲、夜间消费",
+    activity:
+        "县城休闲、夜间消费",
 
-    product: "揭西土特产",
+    product:
+        "揭西土特产",
 
     stay: true,
 
@@ -450,10 +1028,6 @@ const places = {
 },
 
 
-/* =========================
-   黄满寨
-========================= */
-
 "黄满寨瀑布群": {
 
     coord: [23.581222,115.985307],
@@ -462,11 +1036,15 @@ const places = {
 
     category: "eco",
 
-    role: ["核心景点","自然节点"],
+    role: [
+        "核心景点",
+        "自然节点"
+    ],
 
     food: "",
 
-    activity: "瀑布观赏、山地游览",
+    activity:
+        "瀑布观赏、山地游览",
 
     product: "",
 
@@ -485,10 +1063,6 @@ const places = {
 },
 
 
-/* =========================
-   京明
-========================= */
-
 "京明温泉度假村": {
 
     coord: [23.505361,116.046389],
@@ -497,13 +1071,20 @@ const places = {
 
     category: "eco",
 
-    role: ["核心景点","住宿节点","亲子节点"],
+    role: [
+        "核心景点",
+        "住宿节点",
+        "亲子节点"
+    ],
 
-    food: "客家特色菜、度假区餐饮",
+    food:
+        "客家特色菜、度假区餐饮",
 
-    activity: "温泉、动物园、儿童活动、休闲度假",
+    activity:
+        "温泉、动物园、儿童活动、休闲度假",
 
-    product: "茶叶、地方土特产",
+    product:
+        "茶叶、地方土特产",
 
     stay: true,
 
@@ -520,10 +1101,6 @@ const places = {
 },
 
 
-/* =========================
-   云汤山
-========================= */
-
 "云汤山温泉": {
 
     coord: [23.525,116.030],
@@ -532,11 +1109,15 @@ const places = {
 
     category: "eco",
 
-    role: ["休闲节点","住宿节点"],
+    role: [
+        "休闲节点",
+        "住宿节点"
+    ],
 
     food: "",
 
-    activity: "温泉休闲",
+    activity:
+        "温泉休闲",
 
     product: "",
 
@@ -555,10 +1136,6 @@ const places = {
 },
 
 
-/* =========================
-   大洋
-========================= */
-
 "大洋国际生态旅游区": {
 
     coord: [23.629525,116.018366],
@@ -567,11 +1144,15 @@ const places = {
 
     category: "eco",
 
-    role: ["核心景点","生态节点"],
+    role: [
+        "核心景点",
+        "生态节点"
+    ],
 
     food: "",
 
-    activity: "山地观光、生态休闲",
+    activity:
+        "山地观光、生态休闲",
 
     product: "",
 
@@ -590,10 +1171,6 @@ const places = {
 },
 
 
-/* =========================
-   大北山
-========================= */
-
 "大北山森林公园": {
 
     coord: [23.496681,115.952839],
@@ -602,11 +1179,15 @@ const places = {
 
     category: "eco",
 
-    role: ["自然节点","户外节点"],
+    role: [
+        "自然节点",
+        "户外节点"
+    ],
 
     food: "",
 
-    activity: "森林徒步、生态观光",
+    activity:
+        "森林徒步、生态观光",
 
     product: "",
 
@@ -625,10 +1206,6 @@ const places = {
 },
 
 
-/* =========================
-   黄龙寺
-========================= */
-
 "黄龙寺": {
 
     coord: [23.56,115.96],
@@ -637,11 +1214,15 @@ const places = {
 
     category: "culture",
 
-    role: ["文化节点","打卡节点"],
+    role: [
+        "文化节点",
+        "打卡节点"
+    ],
 
     food: "",
 
-    activity: "寺庙参观、文化体验",
+    activity:
+        "寺庙参观、文化体验",
 
     product: "",
 
@@ -660,10 +1241,6 @@ const places = {
 },
 
 
-/* =========================
-   火炬村
-========================= */
-
 "火炬村": {
 
     coord: [23.49,115.90],
@@ -681,9 +1258,11 @@ const places = {
 
     food: "",
 
-    activity: "红色教育、乡村体验、非遗活动",
+    activity:
+        "红色教育、乡村体验、非遗活动",
 
-    product: "地方土特产",
+    product:
+        "地方土特产",
 
     stay: false,
 
@@ -700,10 +1279,6 @@ const places = {
 },
 
 
-/* =========================
-   元合酱园
-========================= */
-
 "元合酱园": {
 
     coord: [23.45,115.91],
@@ -718,11 +1293,14 @@ const places = {
         "购物节点"
     ],
 
-    food: "传统酱料及地方风味",
+    food:
+        "传统酱料及地方风味",
 
-    activity: "非遗制作技艺体验",
+    activity:
+        "非遗制作技艺体验",
 
-    product: "传统酱料、地方土特产",
+    product:
+        "传统酱料、地方土特产",
 
     stay: false,
 
@@ -738,10 +1316,6 @@ const places = {
 
 },
 
-
-/* =========================
-   清元洞
-========================= */
 
 "金山清元洞公园": {
 
@@ -759,7 +1333,8 @@ const places = {
 
     food: "",
 
-    activity: "亲子戏水、自然休闲",
+    activity:
+        "亲子戏水、自然休闲",
 
     product: "",
 
@@ -778,10 +1353,6 @@ const places = {
 },
 
 
-/* =========================
-   棉湖
-========================= */
-
 "棉湖古镇": {
 
     coord: [23.442421,116.134486],
@@ -796,11 +1367,14 @@ const places = {
         "夜游节点"
     ],
 
-    food: "肉脯、刨冰、油柑、潮汕火锅、无米粿",
+    food:
+        "肉脯、刨冰、油柑、潮汕火锅、无米粿",
 
-    activity: "古镇漫游、灯谜、潮剧、民俗活动",
+    activity:
+        "古镇漫游、灯谜、潮剧、民俗活动",
 
-    product: "地方食品、传统小吃",
+    product:
+        "地方食品、传统小吃",
 
     stay: true,
 
@@ -817,10 +1391,6 @@ const places = {
 },
 
 
-/* =========================
-   郭氏大楼
-========================= */
-
 "郭氏大楼": {
 
     coord: [23.443,116.133],
@@ -829,11 +1399,15 @@ const places = {
 
     category: "culture",
 
-    role: ["文化节点","建筑打卡"],
+    role: [
+        "文化节点",
+        "建筑打卡"
+    ],
 
     food: "",
 
-    activity: "历史建筑参观",
+    activity:
+        "历史建筑参观",
 
     product: "",
 
@@ -851,10 +1425,6 @@ const places = {
 
 },
 
-
-/* =========================
-   永昌古庙
-========================= */
 
 "永昌古庙": {
 
@@ -864,11 +1434,15 @@ const places = {
 
     category: "culture",
 
-    role: ["文化节点","民俗节点"],
+    role: [
+        "文化节点",
+        "民俗节点"
+    ],
 
     food: "",
 
-    activity: "民俗文化体验、庙宇参观",
+    activity:
+        "民俗文化体验、庙宇参观",
 
     product: "",
 
@@ -887,10 +1461,6 @@ const places = {
 },
 
 
-/* =========================
-   南山村
-========================= */
-
 "南山村": {
 
     coord: [23.48,115.89],
@@ -899,13 +1469,19 @@ const places = {
 
     category: "cycling",
 
-    role: ["乡村节点","美食节点"],
+    role: [
+        "乡村节点",
+        "美食节点"
+    ],
 
-    food: "包粄",
+    food:
+        "包粄",
 
-    activity: "乡村漫游",
+    activity:
+        "乡村漫游",
 
-    product: "地方土特产",
+    product:
+        "地方土特产",
 
     stay: false,
 
@@ -922,10 +1498,6 @@ const places = {
 },
 
 
-/* =========================
-   大溪镇
-========================= */
-
 "大溪镇": {
 
     coord: [23.48,116.12],
@@ -934,13 +1506,20 @@ const places = {
 
     category: "food",
 
-    role: ["美食节点","非遗节点","乡村节点"],
+    role: [
+        "美食节点",
+        "非遗节点",
+        "乡村节点"
+    ],
 
-    food: "饺面",
+    food:
+        "饺面",
 
-    activity: "民俗文化、祭典活动",
+    activity:
+        "民俗文化、祭典活动",
 
-    product: "地方土特产",
+    product:
+        "地方土特产",
 
     stay: false,
 
@@ -957,10 +1536,6 @@ const places = {
 },
 
 
-/* =========================
-   三山国王祖庙
-========================= */
-
 "三山国王祖庙": {
 
     coord: [23.46,116.10],
@@ -969,11 +1544,15 @@ const places = {
 
     category: "culture",
 
-    role: ["非遗节点","文化节点"],
+    role: [
+        "非遗节点",
+        "文化节点"
+    ],
 
     food: "",
 
-    activity: "三山国王祖庙祭典",
+    activity:
+        "三山国王祖庙祭典",
 
     product: "",
 
@@ -992,10 +1571,6 @@ const places = {
 },
 
 
-/* =========================
-   粗坑村
-========================= */
-
 "粗坑村": {
 
     coord: [23.55,115.92],
@@ -1004,13 +1579,19 @@ const places = {
 
     category: "cycling",
 
-    role: ["乡村节点","小众节点","文化节点"],
+    role: [
+        "乡村节点",
+        "小众节点",
+        "文化节点"
+    ],
 
     food: "",
 
-    activity: "古村漫游、乡村体验",
+    activity:
+        "古村漫游、乡村体验",
 
-    product: "地方农产品",
+    product:
+        "地方农产品",
 
     stay: false,
 
@@ -1027,10 +1608,6 @@ const places = {
 },
 
 
-/* =========================
-   山湖村
-========================= */
-
 "山湖村": {
 
     coord: [23.54,115.94],
@@ -1039,13 +1616,19 @@ const places = {
 
     category: "cycling",
 
-    role: ["乡村节点","生态节点","小众节点"],
+    role: [
+        "乡村节点",
+        "生态节点",
+        "小众节点"
+    ],
 
     food: "",
 
-    activity: "乡村休闲、生态体验",
+    activity:
+        "乡村休闲、生态体验",
 
-    product: "地方农产品",
+    product:
+        "地方农产品",
 
     stay: false,
 
@@ -1070,9 +1653,11 @@ const places = {
 
 const profiles = {
 
+
 culture: {
 
-    name: "文化体验型",
+    name:
+        "文化体验型",
 
     description:
         "偏好历史文化、非遗、古镇、传统建筑和民俗活动。",
@@ -1084,13 +1669,16 @@ culture: {
         "民俗节点"
     ],
 
-    avoidLarge: false
+    avoidLarge:
+        false
 
 },
 
+
 eco: {
 
-    name: "生态休闲型",
+    name:
+        "生态休闲型",
 
     description:
         "偏好瀑布、森林、温泉、山地和自然生态资源。",
@@ -1102,13 +1690,16 @@ eco: {
         "休闲节点"
     ],
 
-    avoidLarge: false
+    avoidLarge:
+        false
 
 },
 
+
 food: {
 
-    name: "美食娱乐型",
+    name:
+        "美食娱乐型",
 
     description:
         "偏好地方特色美食、古镇、美食街区、夜游和娱乐。",
@@ -1120,13 +1711,16 @@ food: {
         "购物节点"
     ],
 
-    avoidLarge: false
+    avoidLarge:
+        false
 
 },
 
+
 cycling: {
 
-    name: "骑行 / 小众探索型",
+    name:
+        "骑行 / 小众探索型",
 
     description:
         "主动避开大型景区，更偏好乡村、非遗、小众自然资源和地方生活。",
@@ -1138,7 +1732,8 @@ cycling: {
         "美食节点"
     ],
 
-    avoidLarge: true
+    avoidLarge:
+        true
 
 }
 
@@ -1146,230 +1741,380 @@ cycling: {
 
 
 /* =====================================================
-   3. 地图
+   3. 初始化地图
 ===================================================== */
 
 const map = L.map("map")
-    .setView([23.52,116.00],11);
+    .setView(
+        [23.52,116.00],
+        11
+    );
 
 
 L.tileLayer(
+
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
     {
 
-        maxZoom:18,
+        maxZoom:
+            18,
 
         attribution:
             "&copy; OpenStreetMap contributors"
 
     }
+
 ).addTo(map);
 
 
 /* =====================================================
-   4. 图标
+   4. 地图图标
 ===================================================== */
 
 const icons = {
 
-    core: L.divIcon({
-        className:"",
-        html:
+
+core: L.divIcon({
+
+    className: "",
+
+    html:
         '<div style="' +
-        'width:18px;height:18px;' +
+
+        'width:18px;' +
+        'height:18px;' +
+
         'background:#d33;' +
-        'border-radius:50%;' +
-        'border:3px solid white;' +
-        'box-shadow:0 1px 5px #555' +
-        '"></div>'
-    }),
 
-    eco: L.divIcon({
-        className:"",
-        html:
+        'border-radius:50%;' +
+
+        'border:3px solid white;' +
+
+        'box-shadow:0 1px 5px #555' +
+
+        '"></div>'
+
+}),
+
+
+eco: L.divIcon({
+
+    className: "",
+
+    html:
         '<div style="' +
-        'width:18px;height:18px;' +
+
+        'width:18px;' +
+        'height:18px;' +
+
         'background:#2e8b57;' +
-        'border-radius:50%;' +
-        'border:3px solid white;' +
-        'box-shadow:0 1px 5px #555' +
-        '"></div>'
-    }),
 
-    culture: L.divIcon({
-        className:"",
-        html:
+        'border-radius:50%;' +
+
+        'border:3px solid white;' +
+
+        'box-shadow:0 1px 5px #555' +
+
+        '"></div>'
+
+}),
+
+
+culture: L.divIcon({
+
+    className: "",
+
+    html:
         '<div style="' +
-        'width:18px;height:18px;' +
+
+        'width:18px;' +
+        'height:18px;' +
+
         'background:#e69500;' +
-        'border-radius:50%;' +
-        'border:3px solid white;' +
-        'box-shadow:0 1px 5px #555' +
-        '"></div>'
-    }),
 
-    small: L.divIcon({
-        className:"",
-        html:
+        'border-radius:50%;' +
+
+        'border:3px solid white;' +
+
+        'box-shadow:0 1px 5px #555' +
+
+        '"></div>'
+
+}),
+
+
+small: L.divIcon({
+
+    className: "",
+
+    html:
         '<div style="' +
-        'width:18px;height:18px;' +
+
+        'width:18px;' +
+        'height:18px;' +
+
         'background:#8a4fff;' +
-        'border-radius:50%;' +
-        'border:3px solid white;' +
-        'box-shadow:0 1px 5px #555' +
-        '"></div>'
-    }),
 
-    stay: L.divIcon({
-        className:"",
-        html:
-        '<div style="' +
-        'width:25px;height:25px;' +
-        'background:#1769aa;' +
-        'color:white;' +
         'border-radius:50%;' +
+
         'border:3px solid white;' +
-        'display:flex;' +
-        'align-items:center;' +
-        'justify-content:center;' +
-        'font-size:14px;' +
+
         'box-shadow:0 1px 5px #555' +
-        '">住</div>'
-    })
+
+        '"></div>'
+
+}),
+
+
+stay: L.divIcon({
+
+    className: "",
+
+    html:
+        '<div style="' +
+
+        'width:25px;' +
+        'height:25px;' +
+
+        'background:#1769aa;' +
+
+        'color:white;' +
+
+        'border-radius:50%;' +
+
+        'border:3px solid white;' +
+
+        'display:flex;' +
+
+        'align-items:center;' +
+
+        'justify-content:center;' +
+
+        'font-size:14px;' +
+
+        'font-weight:bold;' +
+
+        'box-shadow:0 1px 5px #555' +
+
+        '">' +
+
+        '住' +
+
+        '</div>'
+
+})
 
 };
 
 
 /* =====================================================
-   5. 建立所有旅游节点
+   5. 获取图标
+===================================================== */
+
+function getIcon(place) {
+
+
+    if(place.stay)
+        return icons.stay;
+
+
+    if(place.category === "cycling")
+        return icons.small;
+
+
+    if(place.category === "eco")
+        return icons.eco;
+
+
+    if(place.category === "food")
+        return icons.culture;
+
+
+    return icons.culture;
+
+}
+
+
+/* =====================================================
+   6. 建立旅游节点
 ===================================================== */
 
 const markers = {};
 
 
-function getIcon(place) {
+Object.keys(places).forEach(
 
-    if(place.stay)
-        return icons.stay;
+    name => {
 
-    if(place.category === "cycling")
-        return icons.small;
-
-    if(place.category === "eco")
-        return icons.eco;
-
-    if(place.category === "food")
-        return icons.culture;
-
-    return icons.culture;
-}
+        const p =
+            places[name];
 
 
-Object.keys(places).forEach(name => {
+        const marker =
+            L.marker(
 
-    const p = places[name];
+                p.coord,
 
-    const marker =
-        L.marker(
-            p.coord,
-            {icon:getIcon(p)}
-        )
-        .addTo(map);
+                {
+                    icon:
+                        getIcon(p)
+                }
 
-
-    /* ============================================
-       鼠标移动到节点才显示信息
-    ============================================ */
-
-    let html =
-
-        '<div class="node-tooltip">' +
-
-        '<h4>' + name + '</h4>' +
-
-        '<div>' +
-        '<span class="tag">' +
-        p.type +
-        '</span>' +
-        '</div>';
+            ).addTo(map);
 
 
-    if(p.food) {
+        /* -----------------------------------------
+           Tooltip
+        ----------------------------------------- */
 
-        html +=
-        '<b>🍜 独特美食：</b>' +
-        p.food +
-        '<br>';
+        let html =
 
-    }
+            '<div class="node-tooltip">' +
 
+            '<h4>' +
+            name +
+            '</h4>' +
 
-    if(p.activity) {
+            '<div>' +
 
-        html +=
-        '<b>🎭 活动：</b>' +
-        p.activity +
-        '<br>';
+            '<span class="tag">' +
+            p.type +
+            '</span>' +
 
-    }
-
-
-    if(p.product) {
-
-        html +=
-        '<b>🛍 土特产：</b>' +
-        p.product +
-        '<br>';
-
-    }
+            '</div>';
 
 
-    html +=
+        if(p.food) {
 
-        '<b>⏱ 建议游玩：</b>' +
-        p.time +
-        '<br>' +
+            html +=
 
-        '<b>💪 体力：</b>' +
-        p.fitness +
-        '<br>' +
+                '<b>🍜 独特美食：</b>' +
 
-        '<b>👨‍👩‍👧 亲子：</b>' +
-        (p.family ? "适合" : "一般") +
-        '<br>' +
+                p.food +
 
-        '<b>🌿 最佳季节：</b>' +
-        p.season;
+                '<br>';
 
-
-    if(p.stay) {
-
-        html +=
-        '<br><b>🛏 住宿：</b>可作为过夜节点';
-
-    }
-
-
-    html += '</div>';
-
-
-    marker.bindTooltip(
-        html,
-        {
-            direction:"top",
-            sticky:true,
-            opacity:.96
         }
-    );
 
 
-    markers[name] = marker;
+        if(p.activity) {
 
-});
+            html +=
+
+                '<b>🎭 活动：</b>' +
+
+                p.activity +
+
+                '<br>';
+
+        }
+
+
+        if(p.product) {
+
+            html +=
+
+                '<b>🛍 土特产：</b>' +
+
+                p.product +
+
+                '<br>';
+
+        }
+
+
+        html +=
+
+            '<b>⏱ 建议游玩：</b>' +
+            p.time +
+            '<br>' +
+
+            '<b>💪 体力：</b>' +
+            p.fitness +
+            '<br>' +
+
+            '<b>👨‍👩‍👧 亲子：</b>' +
+
+            (
+                p.family
+                ?
+                "适合"
+                :
+                "一般"
+            ) +
+
+            '<br>' +
+
+            '<b>🌿 最佳季节：</b>' +
+
+            p.season;
+
+
+        if(p.stay) {
+
+            html +=
+
+                '<br>' +
+
+                '<b>🛏 住宿：</b>' +
+
+                '可作为过夜节点';
+
+        }
+
+
+        html +=
+            '</div>';
+
+
+        marker.bindTooltip(
+
+            html,
+
+            {
+
+                direction:
+                    "top",
+
+                sticky:
+                    true,
+
+                opacity:
+                    .96,
+
+                interactive:
+                    true
+
+            }
+
+        );
+
+
+        /*
+         * 手机端点击节点即可显示 Tooltip
+         */
+
+        marker.on(
+            "click",
+            function() {
+
+                this.openTooltip();
+
+            }
+        );
+
+
+        markers[name] =
+            marker;
+
+    }
+
+);
 
 
 /* =====================================================
-   6. 路线规划
+   7. 路线模板
 ===================================================== */
 
 const routeTemplates = {
@@ -1377,19 +2122,69 @@ const routeTemplates = {
 
 culture: {
 
+
     1: [
-        ["河婆城区","棉湖古镇","郭氏大楼","永昌古庙"]
+
+        [
+            "河婆城区",
+            "棉湖古镇",
+            "郭氏大楼",
+            "永昌古庙"
+        ]
+
     ],
+
 
     2: [
-        ["河婆城区","火炬村","棉湖古镇","郭氏大楼"],
-        ["棉湖古镇","三山国王祖庙","河婆城区"]
+
+        [
+
+            "河婆城区",
+            "火炬村",
+            "棉湖古镇",
+            "郭氏大楼"
+
+        ],
+
+        [
+
+            "棉湖古镇",
+            "三山国王祖庙",
+            "河婆城区"
+
+        ]
+
     ],
 
+
     3: [
-        ["河婆城区","火炬村","黄龙寺","棉湖古镇"],
-        ["棉湖古镇","郭氏大楼","永昌古庙","三山国王祖庙"],
-        ["三山国王祖庙","大溪镇","河婆城区"]
+
+        [
+
+            "河婆城区",
+            "火炬村",
+            "黄龙寺",
+            "棉湖古镇"
+
+        ],
+
+        [
+
+            "棉湖古镇",
+            "郭氏大楼",
+            "永昌古庙",
+            "三山国王祖庙"
+
+        ],
+
+        [
+
+            "三山国王祖庙",
+            "大溪镇",
+            "河婆城区"
+
+        ]
+
     ]
 
 },
@@ -1397,19 +2192,66 @@ culture: {
 
 eco: {
 
+
     1: [
-        ["河婆城区","大北山森林公园","黄满寨瀑布群"]
+
+        [
+
+            "河婆城区",
+            "大北山森林公园",
+            "黄满寨瀑布群"
+
+        ]
+
     ],
+
 
     2: [
-        ["河婆城区","大北山森林公园","黄满寨瀑布群"],
-        ["黄满寨瀑布群","京明温泉度假村"]
+
+        [
+
+            "河婆城区",
+            "大北山森林公园",
+            "黄满寨瀑布群"
+
+        ],
+
+        [
+
+            "黄满寨瀑布群",
+            "京明温泉度假村"
+
+        ]
+
     ],
 
+
     3: [
-        ["河婆城区","大北山森林公园","黄满寨瀑布群"],
-        ["黄满寨瀑布群","京明温泉度假村","云汤山温泉"],
-        ["云汤山温泉","大洋国际生态旅游区","河婆城区"]
+
+        [
+
+            "河婆城区",
+            "大北山森林公园",
+            "黄满寨瀑布群"
+
+        ],
+
+        [
+
+            "黄满寨瀑布群",
+            "京明温泉度假村",
+            "云汤山温泉"
+
+        ],
+
+        [
+
+            "云汤山温泉",
+            "大洋国际生态旅游区",
+            "河婆城区"
+
+        ]
+
     ]
 
 },
@@ -1417,45 +2259,143 @@ eco: {
 
 food: {
 
+
     1: [
-        ["河婆城区","棉湖古镇","郭氏大楼"]
+
+        [
+
+            "河婆城区",
+            "棉湖古镇",
+            "郭氏大楼"
+
+        ]
+
     ],
+
 
     2: [
-        ["河婆城区","棉湖古镇","元合酱园"],
-        ["元合酱园","京明温泉度假村"]
+
+        [
+
+            "河婆城区",
+            "棉湖古镇",
+            "元合酱园"
+
+        ],
+
+        [
+
+            "元合酱园",
+            "京明温泉度假村"
+
+        ]
+
     ],
 
+
     3: [
-        ["河婆城区","元合酱园","棉湖古镇"],
-        ["棉湖古镇","大溪镇","三山国王祖庙"],
-        ["三山国王祖庙","京明温泉度假村","河婆城区"]
+
+        [
+
+            "河婆城区",
+            "元合酱园",
+            "棉湖古镇"
+
+        ],
+
+        [
+
+            "棉湖古镇",
+            "大溪镇",
+            "三山国王祖庙"
+
+        ],
+
+        [
+
+            "三山国王祖庙",
+            "京明温泉度假村",
+            "河婆城区"
+
+        ]
+
     ]
 
 },
 
 
 /* =================================================
-   骑行 / 小众
+   骑行 / 小众探索
 
-   特意不使用大型核心景区
+   特意避开大型核心景区
 ================================================= */
 
 cycling: {
 
+
     1: [
-        ["河婆城区","火炬村","南山村","金山清元洞公园"]
+
+        [
+
+            "河婆城区",
+            "火炬村",
+            "南山村",
+            "金山清元洞公园"
+
+        ]
+
     ],
+
 
     2: [
-        ["河婆城区","火炬村","南山村"],
-        ["南山村","粗坑村","山湖村","河婆城区"]
+
+        [
+
+            "河婆城区",
+            "火炬村",
+            "南山村"
+
+        ],
+
+        [
+
+            "南山村",
+            "粗坑村",
+            "山湖村",
+            "河婆城区"
+
+        ]
+
     ],
 
+
     3: [
-        ["河婆城区","火炬村","南山村"],
-        ["南山村","粗坑村","山湖村"],
-        ["山湖村","金山清元洞公园","元合酱园","河婆城区"]
+
+        [
+
+            "河婆城区",
+            "火炬村",
+            "南山村"
+
+        ],
+
+        [
+
+            "南山村",
+            "粗坑村",
+            "山湖村"
+
+        ],
+
+        [
+
+            "山湖村",
+            "金山清元洞公园",
+            "元合酱园",
+            "河婆城区"
+
+        ]
+
     ]
 
 }
@@ -1464,21 +2404,36 @@ cycling: {
 
 
 /* =====================================================
-   7. 路线状态
+   8. 路线状态
 ===================================================== */
 
 let routeLayers = [];
 
 let routeToken = 0;
 
-let currentProfile = "culture";
+let currentProfile =
+    "culture";
 
+
+/* =====================================================
+   9. 清除路线
+===================================================== */
 
 function clearRoutes() {
 
+
     routeLayers.forEach(
-        layer => map.removeLayer(layer)
+
+        layer => {
+
+            map.removeLayer(
+                layer
+            );
+
+        }
+
     );
+
 
     routeLayers = [];
 
@@ -1486,37 +2441,50 @@ function clearRoutes() {
 
 
 /* =====================================================
-   8. 画像按钮
+   10. 设置游客画像
 ===================================================== */
 
 function setProfile(profile) {
 
-    currentProfile = profile;
+
+    currentProfile =
+        profile;
 
 
     [
+
         "b1",
         "b2",
         "b3",
         "b4"
-    ].forEach(id => {
 
-        document
-            .getElementById(id)
-            .classList.remove("active");
+    ].forEach(
 
-    });
+        id => {
+
+            document
+                .getElementById(id)
+                .classList
+                .remove("active");
+
+        }
+
+    );
 
 
     const buttonMap = {
 
-        culture:"b1",
+        culture:
+            "b1",
 
-        eco:"b2",
+        eco:
+            "b2",
 
-        food:"b3",
+        food:
+            "b3",
 
-        cycling:"b4"
+        cycling:
+            "b4"
 
     };
 
@@ -1525,23 +2493,30 @@ function setProfile(profile) {
         .getElementById(
             buttonMap[profile]
         )
-        .classList.add("active");
+        .classList
+        .add("active");
 
 
-    const p = profiles[profile];
+    const p =
+        profiles[profile];
 
 
-    document.getElementById(
-        "profileInfo"
-    ).innerHTML =
+    document
+        .getElementById(
+            "profileInfo"
+        )
+        .innerHTML =
 
         "<b>当前游客画像：</b>" +
+
         p.name +
 
         "<br>" +
 
         "<span style='color:#666'>" +
+
         p.description +
+
         "</span>";
 
 
@@ -1551,99 +2526,157 @@ function setProfile(profile) {
 
 
 /* =====================================================
-   9. OSRM 道路路线
+   11. OSRM 道路路线
 ===================================================== */
 
 async function getRoadRoute(
+
     coords,
     day,
     color,
     token
+
 ) {
 
+
     const coordString =
+
         coords
-        .map(
-            p => p[1] + "," + p[0]
-        )
-        .join(";");
+
+            .map(
+
+                p =>
+                    p[1] +
+                    "," +
+                    p[0]
+
+            )
+
+            .join(";");
 
 
     const url =
-        "https://router.project-osrm.org/route/v1/driving/" +
+
+        "https://router.project-osrm.org/" +
+
+        "route/v1/driving/" +
+
         coordString +
+
         "?overview=full&geometries=geojson";
 
 
     try {
+
 
         const response =
             await fetch(url);
 
 
         if(!response.ok)
-            throw new Error("OSRM error");
+            throw new Error(
+                "OSRM error"
+            );
 
 
         const data =
             await response.json();
 
 
-        if(token !== routeToken)
+        if(
+            token !== routeToken
+        )
             return;
 
 
         if(
+
             data.code === "Ok" &&
+
             data.routes.length > 0
+
         ) {
+
 
             const route =
                 data.routes[0];
 
 
             const latlngs =
-                route.geometry.coordinates.map(
-                    p => [p[1],p[0]]
-                );
+
+                route.geometry
+                    .coordinates
+                    .map(
+
+                        p =>
+                            [
+                                p[1],
+                                p[0]
+                            ]
+
+                    );
 
 
             const line =
+
                 L.polyline(
+
                     latlngs,
+
                     {
-                        color:color,
-                        weight:6,
-                        opacity:.85
+
+                        color:
+                            color,
+
+                        weight:
+                            6,
+
+                        opacity:
+                            .85
+
                     }
-                )
-                .addTo(map);
+
+                ).addTo(map);
 
 
             line.bindPopup(
 
                 "<b>" +
+
                 day +
+
                 "</b><br>" +
 
                 "道路距离：" +
-                (route.distance/1000)
-                    .toFixed(1) +
+
+                (
+                    route.distance /
+                    1000
+                ).toFixed(1) +
+
                 " km<br>" +
 
                 "驾车时间：" +
+
                 Math.round(
-                    route.duration/60
+
+                    route.duration /
+                    60
+
                 ) +
+
                 " 分钟"
 
             );
 
 
-            routeLayers.push(line);
+            routeLayers.push(
+                line
+            );
 
 
         } else {
+
 
             drawFallback(
                 coords,
@@ -1654,6 +2687,7 @@ async function getRoadRoute(
 
 
     } catch(error) {
+
 
         drawFallback(
             coords,
@@ -1666,39 +2700,58 @@ async function getRoadRoute(
 
 
 /* =====================================================
-   10. 无网络路线时的备用线
+   12. 备用路线
 ===================================================== */
 
 function drawFallback(
+
     coords,
     color
+
 ) {
 
+
     const line =
+
         L.polyline(
+
             coords,
+
             {
-                color:color,
-                weight:5,
-                opacity:.75,
-                dashArray:"8,8"
+
+                color:
+                    color,
+
+                weight:
+                    5,
+
+                opacity:
+                    .75,
+
+                dashArray:
+                    "8,8"
+
             }
-        )
-        .addTo(map);
+
+        ).addTo(map);
 
 
-    routeLayers.push(line);
+    routeLayers.push(
+        line
+    );
 
 }
 
 
 /* =====================================================
-   11. 自动生成路线
+   13. 自动生成路线
 ===================================================== */
 
 function generateRoute() {
 
+
     routeToken++;
+
 
     const token =
         routeToken;
@@ -1708,14 +2761,20 @@ function generateRoute() {
 
 
     const days =
+
         parseInt(
-            document.getElementById(
-                "duration"
-            ).value
+
+            document
+                .getElementById(
+                    "duration"
+                )
+                .value
+
         );
 
 
     const routes =
+
         routeTemplates[
             currentProfile
         ][days];
@@ -1729,8 +2788,13 @@ function generateRoute() {
 
 
     info +=
+
         "<b>" +
-        profiles[currentProfile].name +
+
+        profiles[
+            currentProfile
+        ].name +
+
         "</b><br>";
 
 
@@ -1741,47 +2805,66 @@ function generateRoute() {
     if(days === 1)
         info += "一天";
 
+
     if(days === 2)
         info += "两天一夜";
+
 
     if(days === 3)
         info += "三天两夜";
 
 
-    info += "<br><br>";
+    info +=
+        "<br><br>";
 
 
-    /* =========================
+    /* ---------------------------------------------
        每一天
-    ========================= */
+    --------------------------------------------- */
 
     routes.forEach(
+
         (day,index) => {
 
+
             const dayName =
-                "Day " + (index + 1);
+                "Day " +
+                (index + 1);
 
 
             info +=
+
                 "<div class='day-box'>" +
 
                 "<div class='day-title'>" +
+
                 dayName +
+
                 "</div>";
 
 
             day.forEach(
+
                 (place,index2) => {
 
+
                     info +=
+
                         (index2 + 1) +
+
                         ". " +
+
                         place;
 
 
                     if(
-                        places[place].stay
+
+                        places[
+                            place
+                        ].stay
+
                     ) {
+
 
                         info +=
                             " 🛏";
@@ -1789,34 +2872,56 @@ function generateRoute() {
                     }
 
 
-                    info += "<br>";
+                    info +=
+                        "<br>";
 
                 }
+
             );
 
 
-            /* =====================
+            /* -----------------------------------------
                过夜判断
-            ===================== */
+            ----------------------------------------- */
 
-            if(days > 1 && index < days-1) {
+            if(
 
-                let overnight = null;
+                days > 1 &&
+
+                index <
+                    days - 1
+
+            ) {
+
+
+                let overnight =
+                    null;
 
 
                 for(
-                    let i=day.length-1;
-                    i>=0;
+
+                    let i =
+                        day.length - 1;
+
+                    i >= 0;
+
                     i--
+
                 ) {
+
 
                     const name =
                         day[i];
 
 
                     if(
-                        places[name].stay
+
+                        places[
+                            name
+                        ].stay
+
                     ) {
+
 
                         overnight =
                             name;
@@ -1830,16 +2935,21 @@ function generateRoute() {
 
                 if(overnight) {
 
+
                     info +=
+
                         "<br>" +
 
                         "🛏 <b>推荐过夜：</b>" +
 
                         overnight;
 
+
                 } else {
 
+
                     info +=
+
                         "<br>" +
 
                         "🛏 <b>建议：</b>" +
@@ -1855,80 +2965,120 @@ function generateRoute() {
                 "</div>";
 
         }
+
     );
 
 
-    document.getElementById(
-        "routeInfo"
-    ).innerHTML = info;
+    document
+        .getElementById(
+            "routeInfo"
+        )
+        .innerHTML =
+        info;
 
 
-    /* =================================================
-       绘制路线
-    ================================================= */
+    /* ---------------------------------------------
+       绘制道路
+    --------------------------------------------- */
 
     const colors = [
+
         "#b22222",
+
         "#1f5f99",
+
         "#6a3d9a"
+
     ];
 
 
     routes.forEach(
+
         (day,index) => {
 
+
             const coords =
+
                 day.map(
+
                     name =>
-                    places[name].coord
+                        places[
+                            name
+                        ].coord
+
                 );
 
 
             getRoadRoute(
+
                 coords,
-                "Day " + (index+1),
+
+                "Day " +
+                    (index + 1),
+
                 colors[index],
+
                 token
+
             );
 
         }
+
     );
 
 
-    /* =================================================
+    /* ---------------------------------------------
        自动缩放地图
-    ================================================= */
+    --------------------------------------------- */
 
     const all = [];
 
 
     routes.forEach(
+
         day => {
 
+
             day.forEach(
+
                 name => {
 
+
                     all.push(
-                        places[name].coord
+
+                        places[
+                            name
+                        ].coord
+
                     );
 
                 }
+
             );
 
         }
+
     );
 
 
     if(all.length > 0) {
 
+
         map.fitBounds(
+
             all,
+
             {
-                padding:[
+
+                padding: [
+
                     60,
                     60
+
                 ]
+
             }
+
         );
 
     }
@@ -1937,13 +3087,44 @@ function generateRoute() {
 
 
 /* =====================================================
-   12. 初始化
+   14. 手机旋转 / 页面尺寸变化
 ===================================================== */
 
-setProfile("culture");
+window.addEventListener(
+
+    "resize",
+
+    function() {
+
+        setTimeout(
+
+            function() {
+
+                map.invalidateSize();
+
+            },
+
+            200
+
+        );
+
+    }
+
+);
+
+
+/* =====================================================
+   15. 初始化
+===================================================== */
+
+setProfile(
+    "culture"
+);
+
 
 </script>
 
 </body>
+
 </html>
 ```
