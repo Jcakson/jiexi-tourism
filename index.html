@@ -1,3566 +1,893 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
-
 <meta charset="utf-8">
-
-<meta name="viewport"
-      content="width=device-width,
-               initial-scale=1.0,
-               maximum-scale=1.0,
-               user-scalable=no">
-
-<title>揭西县游客画像驱动旅游路线 Demo</title>
-
-<link rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>揭西县游客画像驱动旅游路线 Demo · 动态规划</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
-
-/* =====================================================
-   基础
-===================================================== */
-
-html,
-body {
-
-    height:100%;
-    margin:0;
-    padding:0;
-
-    font-family:
-        Arial,
-        "Microsoft YaHei",
-        sans-serif;
-
-}
-
-
-/* =====================================================
-   地图
-===================================================== */
-
-#map {
-
-    position:absolute;
-
-    top:0;
-    left:0;
-
-    width:100%;
-    height:100%;
-
-}
-
-
-/* =====================================================
-   控制面板
-===================================================== */
-
+/* ========== 基础 ========== */
+html, body { height:100%; margin:0; padding:0; font-family: Arial, "Microsoft YaHei", sans-serif; }
+#map { position:absolute; top:0; left:0; width:100%; height:100%; }
 .panel {
-
-    position:absolute;
-
-    z-index:1000;
-
-    top:12px;
-    left:12px;
-
-    width:340px;
-
-    max-height:
-        calc(100vh - 30px);
-
-    overflow-y:auto;
-
-    background:
-        rgba(255,255,255,.96);
-
-    padding:16px 18px;
-
-    border-radius:12px;
-
-    box-shadow:
-        0 3px 15px rgba(0,0,0,.20);
-
-    line-height:1.55;
-
+    position:absolute; z-index:1000; top:12px; left:12px; width:340px;
+    max-height: calc(100vh - 30px); overflow-y:auto; background: rgba(255,255,255,.96);
+    padding:16px 18px; border-radius:12px; box-shadow: 0 3px 15px rgba(0,0,0,.20); line-height:1.55;
 }
-
-
-/* =====================================================
-   标题
-===================================================== */
-
-.panel h2 {
-
-    margin:
-        0 0 4px 0;
-
-    font-size:21px;
-
-}
-
-.panel h3 {
-
-    margin:
-        14px 0 7px 0;
-
-    font-size:15px;
-
-}
-
-
-/* =====================================================
-   游客画像按钮
-===================================================== */
-
-.profile-buttons {
-
-    display:flex;
-
-    flex-wrap:wrap;
-
-    gap:5px;
-
-}
-
+.panel h2 { margin: 0 0 4px 0; font-size:21px; }
+.panel h3 { margin: 14px 0 7px 0; font-size:15px; }
+.profile-buttons { display:flex; flex-wrap:wrap; gap:5px; }
 button {
-
-    border:0;
-
-    padding:
-        8px 11px;
-
-    margin:0;
-
-    border-radius:7px;
-
-    cursor:pointer;
-
-    background:#eeeeee;
-
-    transition:.15s;
-
-    font-size:13px;
-
+    border:0; padding:8px 11px; margin:0; border-radius:7px; cursor:pointer;
+    background:#eeeeee; transition:.15s; font-size:13px;
 }
-
-button:hover {
-
-    background:#dddddd;
-
-}
-
-button.active {
-
-    background:#333;
-
-    color:white;
-
-}
-
-
-/* =====================================================
-   起点设置
-===================================================== */
-
-.start-setting {
-
-    padding:
-        10px;
-
-    background:#f7f7f7;
-
-    border-radius:8px;
-
-}
-
-.start-row {
-
-    display:flex;
-
-    align-items:center;
-
-    gap:7px;
-
-    margin-bottom:8px;
-
-}
-
-.start-row input {
-
-    width:17px;
-    height:17px;
-
-}
-
-.start-row label {
-
-    font-size:13px;
-
-    font-weight:bold;
-
-}
-
+button:hover { background:#dddddd; }
+button.active { background:#333; color:white; }
+.start-setting { padding:10px; background:#f7f7f7; border-radius:8px; }
+.start-row { display:flex; align-items:center; gap:7px; margin-bottom:8px; }
+.start-row input { width:17px; height:17px; }
+.start-row label { font-size:13px; font-weight:bold; }
 select {
-
-    width:100%;
-
-    padding:9px;
-
-    margin-top:4px;
-
-    border:
-        1px solid #ccc;
-
-    border-radius:6px;
-
-    background:white;
-
-    font-size:13px;
-
+    width:100%; padding:9px; margin-top:4px; border:1px solid #ccc;
+    border-radius:6px; background:white; font-size:13px;
 }
-
-
-/* =====================================================
-   推荐结果
-===================================================== */
-
-.result-box {
-
-    margin-top:12px;
-
-    padding:10px;
-
-    background:#f7f7f7;
-
-    border-radius:8px;
-
-    font-size:13px;
-
-}
-
-
-/* =====================================================
-   Day
-===================================================== */
-
+.result-box { margin-top:12px; padding:10px; background:#f7f7f7; border-radius:8px; font-size:13px; }
 .day-box {
-
-    margin-top:10px;
-
-    padding:10px;
-
-    background:white;
-
-    border-left:
-        4px solid #333;
-
-    border-radius:5px;
-
-    box-shadow:
-        0 1px 5px rgba(0,0,0,.08);
-
+    margin-top:10px; padding:10px; background:white; border-left:4px solid #333;
+    border-radius:5px; box-shadow:0 1px 5px rgba(0,0,0,.08);
 }
+.day-title { font-weight:bold; margin-bottom:6px; font-size:14px; }
+.route-place { padding:3px 0; }
+.route-place.start { font-weight:bold; }
+.route-place.stay { color:#1769aa; font-weight:bold; }
+.route-arrow { color:#888; margin-right:4px; }
+.overnight { margin-top:8px; padding:8px; background:#eef6ff; border-radius:6px; color:#1769aa; }
+.start-info { margin-top:8px; padding:8px; background:#fff8e6; border-radius:6px; color:#8a5a00; }
+.legend { margin-top:12px; font-size:12px; }
+.legend-row { margin:5px 0; }
+.legend-dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:5px; vertical-align:middle; }
+.note { font-size:11px; color:#666; margin-top:12px; line-height:1.5; }
+.node-tooltip { min-width:230px; max-width:300px; font-family: Arial, "Microsoft YaHei", sans-serif; line-height:1.55; }
+.node-tooltip h4 { margin: 0 0 6px 0; font-size:15px; }
+.tag { display:inline-block; background:#eee; padding:2px 6px; border-radius:4px; margin:2px 2px 5px 0; font-size:11px; }
 
-.day-title {
-
-    font-weight:bold;
-
-    margin-bottom:6px;
-
-    font-size:14px;
-
+/* 添加节点区域 */
+.add-node-section {
+    margin-top:12px; padding:10px; background:#f0f4f8; border-radius:8px;
+    border-left:4px solid #1769aa;
 }
-
-
-/* =====================================================
-   路线节点
-===================================================== */
-
-.route-place {
-
-    padding:
-        3px 0;
-
+.add-node-section h3 { margin-top:0; margin-bottom:8px; }
+.add-node-row { display:flex; gap:6px; align-items:center; margin-bottom:8px; }
+.add-node-row select { flex:1; margin-top:0; }
+.add-node-row button { white-space:nowrap; background:#1769aa; color:white; padding:8px 14px; }
+.add-node-row button:hover { background:#0d4f8a; }
+.radio-group { display:flex; gap:12px; flex-wrap:wrap; font-size:12px; margin-top:4px; }
+.radio-group label { display:flex; align-items:center; gap:4px; cursor:pointer; }
+.radio-group input[type="radio"] { width:15px; height:15px; }
+.custom-nodes-list { margin-top:6px; font-size:12px; color:#333; }
+.custom-nodes-list .tag-node {
+    display:inline-block; background:#ddeeff; padding:2px 8px; border-radius:12px;
+    margin:2px; font-size:11px;
 }
-
-.route-place.start {
-
-    font-weight:bold;
-
+.custom-nodes-list .tag-node button {
+    background:none; color:#c00; padding:0 0 0 6px; font-size:14px;
+    vertical-align:middle; border-radius:0;
 }
-
-.route-place.stay {
-
-    color:#1769aa;
-
-    font-weight:bold;
-
-}
-
-.route-arrow {
-
-    color:#888;
-
-    margin-right:4px;
-
-}
-
-
-/* =====================================================
-   住宿提示
-===================================================== */
-
-.overnight {
-
-    margin-top:8px;
-
-    padding:8px;
-
-    background:#eef6ff;
-
-    border-radius:6px;
-
-    color:#1769aa;
-
-}
-
-
-/* =====================================================
-   起点提示
-===================================================== */
-
-.start-info {
-
-    margin-top:8px;
-
-    padding:8px;
-
-    background:#fff8e6;
-
-    border-radius:6px;
-
-    color:#8a5a00;
-
-}
-
-
-/* =====================================================
-   图例
-===================================================== */
-
-.legend {
-
-    margin-top:12px;
-
-    font-size:12px;
-
-}
-
-.legend-row {
-
-    margin:5px 0;
-
-}
-
-.legend-dot {
-
-    display:inline-block;
-
-    width:12px;
-    height:12px;
-
-    border-radius:50%;
-
-    margin-right:5px;
-
-    vertical-align:middle;
-
-}
-
-
-/* =====================================================
-   提示文字
-===================================================== */
-
-.note {
-
-    font-size:11px;
-
-    color:#666;
-
-    margin-top:12px;
-
-    line-height:1.5;
-
-}
-
-
-/* =====================================================
-   tooltip
-===================================================== */
-
-.node-tooltip {
-
-    min-width:230px;
-
-    max-width:300px;
-
-    font-family:
-        Arial,
-        "Microsoft YaHei",
-        sans-serif;
-
-    line-height:1.55;
-
-}
-
-.node-tooltip h4 {
-
-    margin:
-        0 0 6px 0;
-
-    font-size:15px;
-
-}
-
-.tag {
-
-    display:inline-block;
-
-    background:#eee;
-
-    padding:
-        2px 6px;
-
-    border-radius:4px;
-
-    margin:
-        2px 2px 5px 0;
-
-    font-size:11px;
-
-}
-
-
-/* =====================================================
-   手机端
-===================================================== */
+.custom-nodes-list .tag-node button:hover { background:none; color:#f00; }
 
 @media (max-width:700px) {
-
-    #map {
-
-        height:
-            58vh;
-
-    }
-
-
+    #map { height: 58vh; }
     .panel {
-
-        position:absolute;
-
-        top:auto;
-        left:0;
-        bottom:0;
-
-        width:100%;
-
-        max-height:
-            42vh;
-
-        box-sizing:border-box;
-
-        padding:
-            12px 14px;
-
-        border-radius:
-            14px 14px 0 0;
-
-        overflow-y:auto;
-
-        box-shadow:
-            0 -3px 15px rgba(0,0,0,.20);
-
+        position:absolute; top:auto; left:0; bottom:0; width:100%;
+        max-height: 42vh; box-sizing:border-box; padding:12px 14px;
+        border-radius:14px 14px 0 0; overflow-y:auto;
+        box-shadow: 0 -3px 15px rgba(0,0,0,.20);
     }
-
-
-    .panel h2 {
-
-        font-size:18px;
-
-    }
-
-
-    .panel h3 {
-
-        margin-top:10px;
-
-        font-size:14px;
-
-    }
-
-
-    button {
-
-        padding:
-            7px 9px;
-
-        font-size:12px;
-
-    }
-
-
-    .result-box {
-
-        font-size:12px;
-
-        margin-top:8px;
-
-        padding:8px;
-
-    }
-
-
-    .day-box {
-
-        margin-top:7px;
-
-        padding:8px;
-
-    }
-
-
-    .note,
-    .legend {
-
-        font-size:10px;
-
-    }
-
+    .panel h2 { font-size:18px; }
+    .panel h3 { margin-top:10px; font-size:14px; }
+    button { padding:7px 9px; font-size:12px; }
+    .result-box { font-size:12px; margin-top:8px; padding:8px; }
+    .day-box { margin-top:7px; padding:8px; }
+    .note, .legend { font-size:10px; }
 }
-
-
-/* =====================================================
-   更小手机
-===================================================== */
-
 @media (max-width:430px) {
-
-    #map {
-
-        height:55vh;
-
-    }
-
-    .panel {
-
-        max-height:45vh;
-
-    }
-
+    #map { height:55vh; }
+    .panel { max-height:45vh; }
 }
-
 </style>
-
 </head>
-
-
 <body>
-
-
 <div id="map"></div>
 
-
-<!-- =====================================================
-     控制面板
-===================================================== -->
-
+<!-- ========== 控制面板 ========== -->
 <div class="panel">
+<h2>揭西县旅游路线</h2>
+<div style="font-size:13px; color:#666;">游客画像驱动的智能旅游路线推荐</div>
 
-
-<h2>
-揭西县旅游路线
-</h2>
-
-
-<div style="
-font-size:13px;
-color:#666;
-">
-
-游客画像驱动的智能旅游路线推荐
-
-</div>
-
-
-
-<!-- =================================================
-     ① 游客画像
-================================================= -->
-
-<h3>
-① 选择游客画像
-</h3>
-
-
+<h3>① 选择游客画像</h3>
 <div class="profile-buttons">
-
-<button id="b1"
-        class="active"
-        onclick="setProfile('culture')">
-
-文化体验型
-
-</button>
-
-
-<button id="b2"
-        onclick="setProfile('eco')">
-
-生态休闲型
-
-</button>
-
-
-<button id="b3"
-        onclick="setProfile('food')">
-
-美食娱乐型
-
-</button>
-
-
-<button id="b4"
-        onclick="setProfile('cycling')">
-
-骑行 / 小众
-
-</button>
-
+    <button id="b1" class="active" onclick="setProfile('culture')">文化体验型</button>
+    <button id="b2" onclick="setProfile('eco')">生态休闲型</button>
+    <button id="b3" onclick="setProfile('food')">美食娱乐型</button>
+    <button id="b4" onclick="setProfile('cycling')">骑行 / 小众</button>
 </div>
 
-
-
-<!-- =================================================
-     ② 时间
-================================================= -->
-
-<h3>
-② 选择游玩计划
-</h3>
-
-
-<select id="duration"
-        onchange="generateRoute()">
-
-<option value="1">
-一天
-</option>
-
-<option value="2">
-两天一夜
-</option>
-
-<option value="3">
-三天两夜
-</option>
-
+<h3>② 选择游玩计划</h3>
+<select id="duration" onchange="generateRoute()">
+    <option value="1">一天</option>
+    <option value="2">两天一夜</option>
+    <option value="3">三天两夜</option>
 </select>
 
-
-
-<!-- =================================================
-     ③ 起点
-================================================= -->
-
-<h3>
-③ 是否设定起始点
-</h3>
-
-
+<h3>③ 是否设定起始点</h3>
 <div class="start-setting">
-
-
-<div class="start-row">
-
-<input
-    type="checkbox"
-    id="useStartPoint"
-    onchange="toggleStartPoint()">
-
-<label for="useStartPoint">
-
-设定固定起点
-
-</label>
-
+    <div class="start-row">
+        <input type="checkbox" id="useStartPoint" onchange="toggleStartPoint()">
+        <label for="useStartPoint">设定固定起点</label>
+    </div>
+    <select id="startPoint" disabled onchange="generateRoute()">
+        <option value="">请选择起点</option>
+    </select>
+    <div style="font-size:11px; color:#777; margin-top:6px;">
+        不设定起点时，系统只在“河婆城区 / 棉湖古镇”中自动选择游客入口。
+    </div>
 </div>
 
-
-<select
-    id="startPoint"
-    disabled
-    onchange="generateRoute()">
-
-<option value="">
-
-请选择起点
-
-</option>
-
-</select>
-
-
-<div style="
-font-size:11px;
-color:#777;
-margin-top:6px;
-">
-
-不设定起点时，
-系统根据游客画像自动生成路线。
-
+<!-- 手动添加节点 -->
+<div class="add-node-section">
+    <h3>➕ 手动添加节点</h3>
+    <div class="add-node-row">
+        <select id="addNodeSelect">
+            <option value="">— 选择要添加的节点 —</option>
+        </select>
+        <button onclick="addCustomNode()">添加</button>
+    </div>
+    <div class="radio-group">
+        <label><input type="radio" name="addMode" value="keep" checked> 仅追加节点</label>
+        <label><input type="radio" name="addMode" value="optimize"> 优化路线</label>
+    </div>
+    <div id="customNodesList" class="custom-nodes-list"></div>
 </div>
 
-</div>
-
-
-
-<!-- =================================================
-     游客画像
-================================================= -->
-
-<div id="profileInfo"
-     class="result-box">
-</div>
-
-
-
-<!-- =================================================
-     路线
-================================================= -->
-
-<div id="routeInfo"
-     class="result-box">
-</div>
-
-
-
-<!-- =================================================
-     图例
-================================================= -->
+<div id="profileInfo" class="result-box"></div>
+<div id="routeInfo" class="result-box"></div>
 
 <div class="legend">
-
-<h3>
-地图图例
-</h3>
-
-
-<div class="legend-row">
-
-<span class="legend-dot"
-      style="background:#d33">
-</span>
-
-核心景区
-
+    <h3>地图图例</h3>
+    <div class="legend-row"><span class="legend-dot" style="background:#d33"></span>核心景区</div>
+    <div class="legend-row"><span class="legend-dot" style="background:#2e8b57"></span>生态 / 山水</div>
+    <div class="legend-row"><span class="legend-dot" style="background:#e69500"></span>文化 / 美食</div>
+    <div class="legend-row"><span class="legend-dot" style="background:#8a4fff"></span>小众 / 骑行</div>
+    <div class="legend-row"><span class="legend-dot" style="background:#1769aa"></span>住宿节点</div>
 </div>
-
-
-<div class="legend-row">
-
-<span class="legend-dot"
-      style="background:#2e8b57">
-</span>
-
-生态 / 山水
-
-</div>
-
-
-<div class="legend-row">
-
-<span class="legend-dot"
-      style="background:#e69500">
-</span>
-
-文化 / 美食
-
-</div>
-
-
-<div class="legend-row">
-
-<span class="legend-dot"
-      style="background:#8a4fff">
-</span>
-
-小众 / 骑行
-
-</div>
-
-
-<div class="legend-row">
-
-<span class="legend-dot"
-      style="background:#1769aa">
-</span>
-
-住宿节点
-
-</div>
-
-</div>
-
-
-
-<!-- =================================================
-     说明
-================================================= -->
 
 <div class="note">
-
-<b>路线规划逻辑：</b>
-
-<br>
-
-① 根据游客画像匹配旅游资源
-
-<br>
-
-② 根据游玩天数安排每日节点
-
-<br>
-
-③ 多日旅行优先安排住宿节点
-
-<br>
-
-④ 用户设定起点后，从指定起点开始规划
-
-<br>
-
-⑤ 未设定起点时，使用系统推荐起点
-
-<br><br>
-
-地图：
-OpenStreetMap
-
-<br>
-
-道路路线：
-OSRM
-
-<br><br>
-
-当前为 Demo 数据。
-正式版本可接入
-“揭西旅游资源综合数据库”。
-
+    <b>路线规划逻辑：</b><br>
+    ① 根据游客画像对每个节点打分<br>
+    ② 结合距离成本做“最近邻 + 时间预算”贪心<br>
+    ③ 自动识别沿途顺路点，提升打卡密度<br>
+    ④ 多日旅行自动选择最近住宿节点收尾<br>
+    ⑤ 用户设定起点后，起点参与第一天排序<br>
+    ⑥ 评分加入随机扰动，路线可动态变化<br>
+    ⑦ 可手动添加节点并选择“仅追加”或“优化路线”<br>
+    ⑧ 添加节点后自动重新评估起点与整体路线<br><br>
+    地图：OpenStreetMap · 道路路线：OSRM<br><br>
+    当前为 Demo 数据。
+</div>
 </div>
 
-
-</div>
-
-
-
-<script
-src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-</script>
-
-
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-
 /* =====================================================
-   1. 揭西旅游资源综合数据库
+   1. 揭西旅游资源综合数据库（坐标已统一为 WGS-84）
 ===================================================== */
-
 const places = {
-
-
-/* =====================================================
-   河婆城区
-===================================================== */
-
-"河婆城区": {
-
-    coord:[23.431410,115.842520],
-
-    type:"城区 / 交通 / 美食",
-
-    category:"culture",
-
-    role:[
-        "交通节点",
-        "住宿节点",
-        "美食节点"
-    ],
-
-    food:"揭西特色小吃",
-
-    activity:"县城休闲、夜间消费",
-
-    product:"揭西土特产",
-
-    stay:true,
-
-    time:"2–4小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:4
-
-},
-
-
-
-/* =====================================================
-   黄满寨
-===================================================== */
-
-"黄满寨瀑布群": {
-
-    coord:[23.581222,115.985307],
-
-    type:"山水 / 生态",
-
-    category:"eco",
-
-    role:[
-        "核心景点",
-        "自然节点"
-    ],
-
-    food:"",
-
-    activity:"瀑布观赏、山地游览",
-
-    product:"",
-
-    stay:false,
-
-    time:"2–3小时",
-
-    fitness:"中",
-
-    family:true,
-
-    season:"春夏秋",
-
-    popularity:5
-
-},
-
-
-
-/* =====================================================
-   京明
-===================================================== */
-
-"京明温泉度假村": {
-
-    coord:[23.505361,116.046389],
-
-    type:"温泉 / 休闲",
-
-    category:"eco",
-
-    role:[
-        "核心景点",
-        "住宿节点",
-        "亲子节点"
-    ],
-
-    food:"客家特色菜、度假区餐饮",
-
-    activity:
-        "温泉、动物园、儿童活动、休闲度假",
-
-    product:
-        "茶叶、地方土特产",
-
-    stay:true,
-
-    time:"半天–1天",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:5
-
-},
-
-
-
-/* =====================================================
-   云汤山
-===================================================== */
-
-"云汤山温泉": {
-
-    coord:[23.525,116.030],
-
-    type:"温泉 / 休闲",
-
-    category:"eco",
-
-    role:[
-        "休闲节点",
-        "住宿节点"
-    ],
-
-    food:"",
-
-    activity:"温泉休闲",
-
-    product:"",
-
-    stay:true,
-
-    time:"3–5小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"秋冬最佳",
-
-    popularity:4
-
-},
-
-
-
-/* =====================================================
-   大洋
-===================================================== */
-
-"大洋国际生态旅游区": {
-
-    coord:[23.629525,116.018366],
-
-    type:"山地 / 生态 / 休闲",
-
-    category:"eco",
-
-    role:[
-        "核心景点",
-        "生态节点",
-        "住宿节点"
-    ],
-
-    food:"",
-
-    activity:
-        "山地观光、生态休闲",
-
-    product:"",
-
-    /* ★ 修改：大洋可以住宿 */
-
-    stay:true,
-
-    time:"半天–1天",
-
-    fitness:"中",
-
-    family:true,
-
-    season:"春夏秋",
-
-    popularity:4
-
-},
-
-
-
-/* =====================================================
-   大北山
-===================================================== */
-
-"大北山森林公园": {
-
-    coord:[23.496681,115.952839],
-
-    type:"森林 / 生态",
-
-    category:"eco",
-
-    role:[
-        "自然节点",
-        "户外节点"
-    ],
-
-    food:"",
-
-    activity:
-        "森林徒步、生态观光",
-
-    product:"",
-
-    stay:false,
-
-    time:"半天–1天",
-
-    fitness:"中–高",
-
-    family:false,
-
-    season:"春秋",
-
-    popularity:4
-
-},
-
-
-
-/* =====================================================
-   黄龙寺
-===================================================== */
-
-"黄龙寺": {
-
-    coord:[23.56,115.96],
-
-    type:"宗教 / 文化",
-
-    category:"culture",
-
-    role:[
-        "文化节点",
-        "打卡节点"
-    ],
-
-    food:"",
-
-    activity:
-        "寺庙参观、文化体验",
-
-    product:"",
-
-    stay:false,
-
-    time:"1–2小时",
-
-    fitness:"中",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:4
-
-},
-
-
-
-/* =====================================================
-   火炬村
-===================================================== */
-
-"火炬村": {
-
-    coord:[23.49,115.90],
-
-    type:"红色历史 / 乡村 / 非遗",
-
-    category:"cycling",
-
-    role:[
-        "红色节点",
-        "乡村节点",
-        "非遗节点",
-        "交通节点",
-        "住宿节点"
-    ],
-
-    food:"",
-
-    activity:
-        "红色教育、乡村体验、非遗活动",
-
-    product:
-        "地方土特产",
-
-    /* ★ 修改：火炬村可考虑住宿 */
-
-    stay:true,
-
-    time:"2–4小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:4
-
-},
-
-
-
-/* =====================================================
-   元合酱园
-===================================================== */
-
-"元合酱园": {
-
-    coord:[23.45,115.91],
-
-    type:"非遗 / 美食",
-
-    category:"food",
-
-    role:[
-        "非遗节点",
-        "体验节点",
-        "购物节点"
-    ],
-
-    food:
-        "传统酱料及地方风味",
-
-    activity:
-        "非遗制作技艺体验",
-
-    product:
-        "传统酱料、地方土特产",
-
-    stay:false,
-
-    time:"1–2小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:3
-
-},
-
-
-
-/* =====================================================
-   大溪镇 · 金山清元洞公园
-===================================================== */
-
-"大溪镇·金山清元洞公园": {
-
-    coord:[23.52,116.08],
-
-    type:"大溪镇 / 生态 / 亲子 / 玩水",
-
-    category:"cycling",
-
-    role:[
-        "亲子节点",
-        "小众节点",
-        "休闲节点",
-        "大溪镇节点"
-    ],
-
-    food:"",
-
-    activity:
-        "亲子戏水、自然休闲",
-
-    product:"",
-
-    stay:false,
-
-    time:"2–4小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"春夏",
-
-    popularity:2
-
-},
-
-
-
-/* =====================================================
-   棉湖
-===================================================== */
-
-"棉湖古镇": {
-
-    coord:[23.442421,116.134486],
-
-    type:"古镇 / 民俗 / 美食",
-
-    category:"food",
-
-    role:[
-        "文化节点",
-        "美食节点",
-        "夜游节点",
-        "住宿节点"
-    ],
-
-    food:
-        "肉脯、刨冰、油柑、潮汕火锅、无米粿",
-
-    activity:
-        "古镇漫游、灯谜、潮剧、民俗活动",
-
-    product:
-        "地方食品、传统小吃",
-
-    stay:true,
-
-    time:"半天",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:5
-
-},
-
-
-
-/* =====================================================
-   郭氏大楼
-===================================================== */
-
-"郭氏大楼": {
-
-    coord:[23.443,116.133],
-
-    type:"历史建筑",
-
-    category:"culture",
-
-    role:[
-        "文化节点",
-        "建筑打卡"
-    ],
-
-    food:"",
-
-    activity:
-        "历史建筑参观",
-
-    product:"",
-
-    stay:false,
-
-    time:"1小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:3
-
-},
-
-
-
-/* =====================================================
-   永昌古庙
-===================================================== */
-
-"永昌古庙": {
-
-    coord:[23.4435,116.135],
-
-    type:"传统文化",
-
-    category:"culture",
-
-    role:[
-        "文化节点",
-        "民俗节点"
-    ],
-
-    food:"",
-
-    activity:
-        "民俗文化体验、庙宇参观",
-
-    product:"",
-
-    stay:false,
-
-    time:"1小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:3
-
-},
-
-
-
-/* =====================================================
-   南山村
-===================================================== */
-
-"南山村": {
-
-    coord:[23.48,115.89],
-
-    type:"乡村 / 美食",
-
-    category:"cycling",
-
-    role:[
-        "乡村节点",
-        "美食节点"
-    ],
-
-    /* ★ 修改：加入包粄 */
-
-    food:"包粄",
-
-    activity:
-        "乡村漫游",
-
-    product:
-        "地方土特产",
-
-    stay:false,
-
-    time:"1–2小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:2
-
-},
-
-
-
-/* =====================================================
-   大溪镇
-===================================================== */
-
-"大溪镇": {
-
-    coord:[23.48,116.12],
-
-    type:"乡村 / 民俗 / 美食",
-
-    category:"food",
-
-    role:[
-        "美食节点",
-        "非遗节点",
-        "乡村节点"
-    ],
-
-    food:"饺面",
-
-    activity:
-        "民俗文化、祭典活动",
-
-    product:
-        "地方土特产",
-
-    stay:false,
-
-    time:"2–3小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:3
-
-},
-
-
-
-/* =====================================================
-   三山国王祖庙
-===================================================== */
-
-"三山国王祖庙": {
-
-    coord:[23.46,116.10],
-
-    type:"民俗 / 非遗",
-
-    category:"culture",
-
-    role:[
-        "非遗节点",
-        "文化节点"
-    ],
-
-    food:"",
-
-    activity:
-        "三山国王祖庙祭典",
-
-    product:"",
-
-    stay:false,
-
-    time:"1–2小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:5
-
-},
-
-
-
-/* =====================================================
-   粗坑村
-===================================================== */
-
-"粗坑村": {
-
-    coord:[23.55,115.92],
-
-    type:"历史村落 / 乡村",
-
-    category:"cycling",
-
-    role:[
-        "乡村节点",
-        "小众节点",
-        "文化节点"
-    ],
-
-    food:"",
-
-    activity:
-        "古村漫游、乡村体验",
-
-    product:
-        "地方农产品",
-
-    stay:false,
-
-    time:"2–3小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"全年",
-
-    popularity:2
-
-},
-
-
-
-/* =====================================================
-   山湖村
-===================================================== */
-
-"山湖村": {
-
-    coord:[23.54,115.94],
-
-    type:"乡村 / 生态",
-
-    category:"cycling",
-
-    role:[
-        "乡村节点",
-        "生态节点",
-        "小众节点"
-    ],
-
-    food:"",
-
-    activity:
-        "乡村休闲、生态体验",
-
-    product:
-        "地方农产品",
-
-    stay:false,
-
-    time:"2小时",
-
-    fitness:"低",
-
-    family:true,
-
-    season:"春秋",
-
-    popularity:2
-
-}
-
+    "河婆城区": {
+        coord:[23.431410,115.842520], type:"城区 / 交通 / 美食", category:"culture",
+        role:["交通节点","住宿节点","美食节点"], food:"揭西特色小吃",
+        activity:"县城休闲、夜间消费", product:"揭西土特产", stay:true,
+        time:"2–4小时", fitness:"低", family:true, season:"全年", popularity:4
+    },
+    "黄满寨瀑布群": {
+        coord:[23.5819574,115.9854709], type:"山水 / 生态", category:"eco",
+        role:["核心景点","自然节点"], food:"", activity:"瀑布观赏、山地游览",
+        product:"", stay:false, time:"2–3小时", fitness:"中", family:true,
+        season:"春夏秋", popularity:5
+    },
+    "京明温泉度假村": {
+        coord:[23.49347666,116.07055664], coordSystem:"GCJ02", type:"温泉 / 休闲", category:"eco",
+        role:["核心景点","住宿节点","亲子节点"], food:"客家特色菜、度假区餐饮",
+        activity:"温泉、动物园、儿童活动、休闲度假", product:"茶叶、地方土特产",
+        stay:true, time:"半天–1天", fitness:"低", family:true, season:"全年", popularity:5
+    },
+    "云汤山温泉": {
+        coord:[23.395,115.724], type:"温泉 / 休闲", category:"eco",
+        role:["休闲节点","住宿节点"], food:"", activity:"温泉休闲", product:"",
+        stay:true, time:"3–5小时", fitness:"低", family:true, season:"秋冬最佳", popularity:4
+    },
+    "大洋国际生态旅游区": {
+        coord:[23.620786,115.999747], type:"山地 / 生态 / 休闲", category:"eco",
+        role:["核心景点","生态节点","住宿节点"], food:"", activity:"山地观光、生态休闲",
+        product:"", stay:true, time:"半天–1天", fitness:"中", family:true,
+        season:"春夏秋", popularity:4
+    },
+    "大北山森林公园": {
+        coord:[23.496681,115.952839], type:"森林 / 生态", category:"eco",
+        role:["自然节点","户外节点"], food:"", activity:"森林徒步、生态观光",
+        product:"", stay:false, time:"半天–1天", fitness:"中–高", family:false,
+        season:"春秋", popularity:4
+    },
+    "黄龙寺": {
+        coord:[23.560458,116.072479], type:"宗教 / 文化", category:"culture",
+        role:["文化节点","打卡节点"], food:"", activity:"寺庙参观、文化体验",
+        product:"", stay:false, time:"1–2小时", fitness:"中", family:true,
+        season:"全年", popularity:4
+    },
+    "火炬村": {
+        coord:[23.49,115.90], type:"红色历史 / 乡村 / 非遗", category:"cycling",
+        role:["红色节点","乡村节点","非遗节点","交通节点","住宿节点"], food:"",
+        activity:"红色教育、乡村体验、非遗活动", product:"地方土特产", stay:true,
+        time:"2–4小时", fitness:"低", family:true, season:"全年", popularity:4
+    },
+    "元合酱园": {
+        coord:[23.49585160,116.00296817], type:"非遗 / 美食", category:"food",
+        role:["非遗节点","体验节点","购物节点"], food:"传统酱料及地方风味",
+        activity:"非遗制作技艺体验", product:"传统酱料、地方土特产", stay:false,
+        time:"1–2小时", fitness:"低", family:true, season:"全年", popularity:3
+    },
+    "大溪镇·金山清元洞公园": {
+        coord:[23.418910,115.953442], type:"大溪镇 / 生态 / 亲子 / 玩水", category:"cycling",
+        role:["亲子节点","小众节点","休闲节点","大溪镇节点"], food:"",
+        activity:"亲子戏水、自然休闲", product:"", stay:false, time:"2–4小时",
+        fitness:"低", family:true, season:"春夏", popularity:2
+    },
+    "棉湖古镇": {
+        coord:[23.442421,116.134486], type:"古镇 / 民俗 / 美食", category:"food",
+        role:["文化节点","美食节点","夜游节点","住宿节点"],
+        food:"刨冰、油柑汁、潮汕火锅、无米粿",
+        checkin:"郭氏大楼、永昌古庙、解放路",
+        activity:"古镇漫游、灯谜、潮剧、民俗活动、英歌舞、打铁花",
+        product:"杨进峰猪肉脯、红脚芥蓝", stay:true, time:"半天",
+        fitness:"低", family:true, season:"全年", popularity:5
+    },
+    "南山村": {
+        coord:[23.49887600,115.96643800], coordSystem:"GCJ02", type:"乡村 / 美食", category:"cycling",
+        role:["乡村节点","美食节点"], food:"包粄", activity:"乡村漫游",
+        product:"地方土特产", stay:false, time:"1–2小时", fitness:"低",
+        family:true, season:"全年", popularity:2
+    },
+    "大溪镇": {
+        coord:[23.432983,115.953354], type:"乡村 / 民俗 / 美食", category:"food",
+        role:["美食节点","非遗节点","乡村节点"], food:"饺面",
+        activity:"民俗文化、祭典活动", product:"地方土特产", stay:false,
+        time:"2–3小时", fitness:"低", family:true, season:"全年", popularity:3
+    },
+    "三山国王祖庙": {
+        coord:[23.4176278, 115.8158694], type:"民俗 / 非遗", category:"culture",
+        role:["非遗节点","文化节点"], food:"", activity:"三山国王祖庙祭典",
+        product:"", stay:false, time:"1–2小时", fitness:"低", family:true,
+        season:"全年", popularity:5
+    },
+    "钱坑镇": {
+        coord:[23.38862000,115.99911700], coordSystem:"GCJ02", type:"乡村 / 民俗 / 古村落 / 美食",
+        category:"culture", role:["乡村节点","文化节点","非遗节点","美食节点","小众节点"],
+        food:"地方传统小吃、客家风味", activity:"钱坑木雕体验、古村落漫游、民俗文化体验",
+        product:"钱坑木雕、地方土特产、传统手工艺品", stay:false, time:"2–3小时",
+        fitness:"低", family:true, season:"全年", popularity:3
+    },
+    "石灵寺": {
+        coord:[23.40036240,116.00223541], coordSystem:"GCJ02", type:"宗教 / 文化", category:"culture",
+        role:["文化节点","宗教节点","打卡节点"], food:"",
+        activity:"寺庙参观、祈福体验、传统文化体验", product:"地方土特产",
+        stay:false, time:"1–2小时", fitness:"低", family:true, season:"全年", popularity:4
+    },
+    "粗坑村": {
+        coord:[23.55,115.92], type:"历史村落 / 乡村", category:"cycling",
+        role:["乡村节点","小众节点","文化节点"], food:"", activity:"古村漫游、乡村体验",
+        product:"地方农产品", stay:false, time:"2–3小时", fitness:"低",
+        family:true, season:"全年", popularity:2
+    },
+    "山湖村": {
+        coord:[23.54,115.94], type:"乡村 / 生态", category:"cycling",
+        role:["乡村节点","生态节点","小众节点"], food:"", activity:"乡村休闲、生态体验",
+        product:"地方农产品", stay:false, time:"2小时", fitness:"低",
+        family:true, season:"春秋", popularity:2
+    }
 };
-
-
 
 /* =====================================================
    2. 游客画像
 ===================================================== */
-
 const profiles = {
-
-
-culture: {
-
-    name:"文化体验型",
-
-    description:
-        "偏好历史文化、非遗、古镇、传统建筑、红色文化和民俗活动。",
-
-    keywords:[
-        "文化节点",
-        "非遗节点",
-        "红色节点",
-        "民俗节点"
-    ],
-
-    avoidLarge:false
-
-},
-
-
-eco: {
-
-    name:"生态休闲型",
-
-    description:
-        "偏好瀑布、森林、温泉、山地、生态景观和休闲度假。",
-
-    keywords:[
-        "自然节点",
-        "生态节点",
-        "核心景点",
-        "休闲节点"
-    ],
-
-    avoidLarge:false
-
-},
-
-
-food: {
-
-    name:"美食娱乐型",
-
-    description:
-        "偏好地方特色美食、古镇、美食街区、夜游、非遗体验和地方消费。",
-
-    keywords:[
-        "美食节点",
-        "夜游节点",
-        "体验节点",
-        "购物节点"
-    ],
-
-    avoidLarge:false
-
-},
-
-
-cycling: {
-
-    name:"骑行 / 小众探索型",
-
-    description:
-        "主动降低大型景区权重，更偏好乡村、非遗、小众自然资源和地方生活。",
-
-    keywords:[
-        "乡村节点",
-        "小众节点",
-        "非遗节点",
-        "美食节点"
-    ],
-
-    avoidLarge:true
-
-}
-
+    culture: {
+        name:"文化体验型",
+        description:"偏好历史文化、非遗、古镇、传统建筑、红色文化和民俗活动。",
+        keywords:["文化节点","非遗节点","红色节点","民俗节点"], avoidLarge:false
+    },
+    eco: {
+        name:"生态休闲型",
+        description:"偏好瀑布、森林、温泉、山地、生态景观和休闲度假。",
+        keywords:["自然节点","生态节点","核心景点","休闲节点"], avoidLarge:false
+    },
+    food: {
+        name:"美食娱乐型",
+        description:"偏好地方特色美食、古镇、美食街区、夜游、非遗体验和地方消费。",
+        keywords:["美食节点","夜游节点","体验节点","购物节点"], avoidLarge:false
+    },
+    cycling: {
+        name:"骑行 / 小众探索型",
+        description:"主动降低大型景区权重，更偏好乡村、非遗、小众自然资源和地方生活。",
+        keywords:["乡村节点","小众节点","非遗节点","美食节点"], avoidLarge:true
+    }
 };
-
-
 
 /* =====================================================
    3. 地图
 ===================================================== */
-
-const map =
-    L.map("map")
-     .setView(
-        [23.52,116.00],
-        11
-     );
-
-
-L.tileLayer(
-
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-
-    {
-
-        maxZoom:18,
-
-        attribution:
-            "&copy; OpenStreetMap contributors"
-
-    }
-
-).addTo(map);
-
-
+const map = L.map("map").setView([23.52,116.00], 11);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom:18, attribution:"&copy; OpenStreetMap contributors"
+}).addTo(map);
 
 /* =====================================================
    4. 图标
 ===================================================== */
-
 const icons = {
-
-
-core:
-L.divIcon({
-
-    className:"",
-
-    html:
-    '<div style="' +
-    'width:18px;height:18px;' +
-    'background:#d33;' +
-    'border-radius:50%;' +
-    'border:3px solid white;' +
-    'box-shadow:0 1px 5px #555' +
-    '"></div>'
-
-}),
-
-
-eco:
-L.divIcon({
-
-    className:"",
-
-    html:
-    '<div style="' +
-    'width:18px;height:18px;' +
-    'background:#2e8b57;' +
-    'border-radius:50%;' +
-    'border:3px solid white;' +
-    'box-shadow:0 1px 5px #555' +
-    '"></div>'
-
-}),
-
-
-culture:
-L.divIcon({
-
-    className:"",
-
-    html:
-    '<div style="' +
-    'width:18px;height:18px;' +
-    'background:#e69500;' +
-    'border-radius:50%;' +
-    'border:3px solid white;' +
-    'box-shadow:0 1px 5px #555' +
-    '"></div>'
-
-}),
-
-
-small:
-L.divIcon({
-
-    className:"",
-
-    html:
-    '<div style="' +
-    'width:18px;height:18px;' +
-    'background:#8a4fff;' +
-    'border-radius:50%;' +
-    'border:3px solid white;' +
-    'box-shadow:0 1px 5px #555' +
-    '"></div>'
-
-}),
-
-
-stay:
-L.divIcon({
-
-    className:"",
-
-    html:
-    '<div style="' +
-    'width:26px;height:26px;' +
-    'background:#1769aa;' +
-    'color:white;' +
-    'border-radius:50%;' +
-    'border:3px solid white;' +
-    'display:flex;' +
-    'align-items:center;' +
-    'justify-content:center;' +
-    'font-size:13px;' +
-    'font-weight:bold;' +
-    'box-shadow:0 1px 5px #555' +
-    '">住</div>'
-
-}),
-
-
-start:
-L.divIcon({
-
-    className:"",
-
-    html:
-    '<div style="' +
-    'width:30px;height:30px;' +
-    'background:#111;' +
-    'color:white;' +
-    'border-radius:50%;' +
-    'border:3px solid white;' +
-    'display:flex;' +
-    'align-items:center;' +
-    'justify-content:center;' +
-    'font-size:13px;' +
-    'font-weight:bold;' +
-    'box-shadow:0 1px 6px #333' +
-    '">起</div>'
-
-})
-
+    core: L.divIcon({ className:"", html:'<div style="width:18px;height:18px;background:#d33;border-radius:50%;border:3px solid white;box-shadow:0 1px 5px #555"></div>' }),
+    eco: L.divIcon({ className:"", html:'<div style="width:18px;height:18px;background:#2e8b57;border-radius:50%;border:3px solid white;box-shadow:0 1px 5px #555"></div>' }),
+    culture: L.divIcon({ className:"", html:'<div style="width:18px;height:18px;background:#e69500;border-radius:50%;border:3px solid white;box-shadow:0 1px 5px #555"></div>' }),
+    small: L.divIcon({ className:"", html:'<div style="width:18px;height:18px;background:#8a4fff;border-radius:50%;border:3px solid white;box-shadow:0 1px 5px #555"></div>' }),
+    stay: L.divIcon({ className:"", html:'<div style="width:26px;height:26px;background:#1769aa;color:white;border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;box-shadow:0 1px 5px #555">住</div>' }),
+    start: L.divIcon({ className:"", html:'<div style="width:30px;height:30px;background:#111;color:white;border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;box-shadow:0 1px 6px #333">起</div>' })
 };
 
-
-
-/* =====================================================
-   5. 获取图标
-===================================================== */
-
 function getIcon(place) {
-
-
-    if(place.stay)
-
-        return icons.stay;
-
-
-    if(place.category === "cycling")
-
-        return icons.small;
-
-
-    if(place.category === "eco")
-
-        return icons.eco;
-
-
+    if(place.stay) return icons.stay;
+    if(place.category === "cycling") return icons.small;
+    if(place.category === "eco") return icons.eco;
     return icons.culture;
-
 }
 
-
+/* =====================================================
+   5. GCJ02 → WGS84 转换
+===================================================== */
+function outOfChina(lat, lon) { return lon < 72.004 || lon > 137.8347 || lat < 0.8293 || lat > 55.8271; }
+function transformLat(x, y) {
+    let ret = -100.0 + 2.0*x + 3.0*y + 0.2*y*y + 0.1*x*y + 0.2*Math.sqrt(Math.abs(x));
+    ret += (20.0*Math.sin(6.0*x*Math.PI) + 20.0*Math.sin(2.0*x*Math.PI))*2.0/3.0;
+    ret += (20.0*Math.sin(y*Math.PI) + 40.0*Math.sin(y/3.0*Math.PI))*2.0/3.0;
+    ret += (160.0*Math.sin(y/12.0*Math.PI) + 320*Math.sin(y*Math.PI/30.0))*2.0/3.0;
+    return ret;
+}
+function transformLon(x, y) {
+    let ret = 300.0 + x + 2.0*y + 0.1*x*x + 0.1*x*y + 0.1*Math.sqrt(Math.abs(x));
+    ret += (20.0*Math.sin(6.0*x*Math.PI) + 20.0*Math.sin(2.0*x*Math.PI))*2.0/3.0;
+    ret += (20.0*Math.sin(x*Math.PI) + 40.0*Math.sin(x/3.0*Math.PI))*2.0/3.0;
+    ret += (150.0*Math.sin(x/12.0*Math.PI) + 300.0*Math.sin(x/30.0*Math.PI))*2.0/3.0;
+    return ret;
+}
+function gcj02ToWgs84(coord) {
+    const lat=coord[0], lon=coord[1];
+    if(outOfChina(lat,lon)) return coord;
+    const a=6378245.0, ee=0.00669342162296594323;
+    let dLat=transformLat(lon-105.0,lat-35.0);
+    let dLon=transformLon(lon-105.0,lat-35.0);
+    const radLat=lat/180.0*Math.PI;
+    let magic=Math.sin(radLat);
+    magic=1-ee*magic*magic;
+    const sqrtMagic=Math.sqrt(magic);
+    dLat=(dLat*180.0)/(a*(1-ee)/(magic*sqrtMagic)*Math.PI);
+    dLon=(dLon*180.0)/(a/sqrtMagic*Math.cos(radLat)*Math.PI);
+    return [lat-dLat,lon-dLon];
+}
+function getMapCoord(name) {
+    const p=places[name];
+    if(!p) return null;
+    return p.coordSystem === "GCJ02" ? gcj02ToWgs84(p.coord) : p.coord;
+}
 
 /* =====================================================
-   6. 建立节点
+   6. 建立节点标记
 ===================================================== */
-
 const markers = {};
-
-
-Object.keys(places).forEach(
-
-    name => {
-
-
-        const p =
-            places[name];
-
-
-        const marker =
-            L.marker(
-
-                p.coord,
-
-                {
-                    icon:getIcon(p)
-                }
-
-            ).addTo(map);
-
-
-
-        let html =
-
-            '<div class="node-tooltip">' +
-
-            '<h4>' +
-            name +
-            '</h4>' +
-
-            '<div>' +
-
-            '<span class="tag">' +
-            p.type +
-            '</span>' +
-
-            '</div>';
-
-
-
-        if(p.food) {
-
-            html +=
-
-                '<b>🍜 独特美食：</b>' +
-                p.food +
-                '<br>';
-
-        }
-
-
-
-        if(p.activity) {
-
-            html +=
-
-                '<b>🎭 活动：</b>' +
-                p.activity +
-                '<br>';
-
-        }
-
-
-
-        if(p.product) {
-
-            html +=
-
-                '<b>🛍 土特产：</b>' +
-                p.product +
-                '<br>';
-
-        }
-
-
-
-        html +=
-
-            '<b>⏱ 建议游玩：</b>' +
-            p.time +
-            '<br>' +
-
-            '<b>💪 体力：</b>' +
-            p.fitness +
-            '<br>' +
-
-            '<b>👨‍👩‍👧 亲子：</b>' +
-            (
-                p.family
-                ? "适合"
-                : "一般"
-            ) +
-            '<br>' +
-
-            '<b>🌿 最佳季节：</b>' +
-            p.season;
-
-
-
-        if(p.stay) {
-
-            html +=
-
-                '<br>' +
-
-                '<b>🛏 住宿：</b>' +
-
-                '可作为过夜节点';
-
-        }
-
-
-
-        html +=
-            '</div>';
-
-
-
-        marker.bindTooltip(
-
-            html,
-
-            {
-
-                direction:"top",
-
-                sticky:true,
-
-                opacity:.96
-
-            }
-
-        );
-
-
-        markers[name] =
-            marker;
-
-    }
-
-);
-
-
+Object.keys(places).forEach(name => {
+    const p = places[name];
+    const marker = L.marker(getMapCoord(name), { icon:getIcon(p) }).addTo(map);
+    let html = '<div class="node-tooltip"><h4>' + name + '</h4><div><span class="tag">' + p.type + '</span></div>';
+    if(p.food) html += '<b>🍜 独特美食：</b>' + p.food + '<br>';
+    if(p.checkin) html += '<b>📍 古镇打卡点：</b>' + p.checkin + '<br>';
+    if(p.activity) html += '<b>🎭 活动：</b>' + p.activity + '<br>';
+    if(p.product) html += '<b>🛍 土特产：</b>' + p.product + '<br>';
+    html += '<b>⏱ 建议游玩：</b>' + p.time + '<br><b>💪 体力：</b>' + p.fitness + '<br><b>👨‍👩‍👧 亲子：</b>' + (p.family ? "适合" : "一般") + '<br><b>🌿 最佳季节：</b>' + p.season;
+    if(p.stay) html += '<br><b>🛏 住宿：</b>可作为过夜节点';
+    html += '</div>';
+    marker.bindTooltip(html, { direction:"top", sticky:true, opacity:.96 });
+    markers[name] = marker;
+});
 
 /* =====================================================
-   7. 起点下拉框
+   7. 填充下拉框
 ===================================================== */
-
-const startSelect =
-    document.getElementById(
-        "startPoint"
-    );
-
-
-Object.keys(places).forEach(
-
-    name => {
-
-        const option =
-            document.createElement(
-                "option"
-            );
-
-        option.value =
-            name;
-
-        option.textContent =
-            name;
-
-        startSelect.appendChild(
-            option
-        );
-
-    }
-
-);
-
-
+const startSelect = document.getElementById("startPoint");
+const addNodeSelect = document.getElementById("addNodeSelect");
+Object.keys(places).forEach(name => {
+    const option = document.createElement("option");
+    option.value = name; option.textContent = name; startSelect.appendChild(option);
+    const option2 = document.createElement("option");
+    option2.value = name; option2.textContent = name; addNodeSelect.appendChild(option2);
+});
 
 /* =====================================================
    8. 起点控制
 ===================================================== */
-
 function toggleStartPoint() {
-
-
-    const checkbox =
-        document.getElementById(
-            "useStartPoint"
-        );
-
-
-    const select =
-        document.getElementById(
-            "startPoint"
-        );
-
-
-    select.disabled =
-        !checkbox.checked;
-
-
-    if(
-        !checkbox.checked
-    ) {
-
-        select.value = "";
-
-    }
-
-
+    const checkbox = document.getElementById("useStartPoint");
+    const select = document.getElementById("startPoint");
+    select.disabled = !checkbox.checked;
+    if(!checkbox.checked) select.value = "";
     generateRoute();
-
 }
 
-
-
 /* =====================================================
-   9. 路线模板
+   9. 路线状态 & 自定义节点
 ===================================================== */
-
-const routeTemplates = {
-
-
-/* =====================================================
-   文化
-===================================================== */
-
-culture: {
-
-
-1:[
-[
-    "河婆城区",
-    "火炬村",
-    "棉湖古镇",
-    "郭氏大楼",
-    "永昌古庙"
-]
-],
-
-
-2:[
-[
-    "河婆城区",
-    "火炬村",
-    "棉湖古镇",
-    "郭氏大楼"
-],
-
-[
-    "棉湖古镇",
-    "三山国王祖庙",
-    "大溪镇",
-    "河婆城区"
-]
-],
-
-
-3:[
-[
-    "河婆城区",
-    "火炬村",
-    "黄龙寺",
-    "棉湖古镇"
-],
-
-[
-    "棉湖古镇",
-    "郭氏大楼",
-    "永昌古庙",
-    "三山国王祖庙"
-],
-
-[
-    "三山国王祖庙",
-    "大溪镇",
-    "大溪镇·金山清元洞公园",
-    "河婆城区"
-]
-]
-
-},
-
-
-
-/* =====================================================
-   生态
-===================================================== */
-
-eco: {
-
-
-1:[
-[
-    "河婆城区",
-    "大北山森林公园",
-    "黄满寨瀑布群"
-]
-],
-
-
-2:[
-[
-    "河婆城区",
-    "大北山森林公园",
-    "黄满寨瀑布群"
-],
-
-[
-    "黄满寨瀑布群",
-    "京明温泉度假村"
-]
-],
-
-
-3:[
-[
-    "河婆城区",
-    "大北山森林公园",
-    "黄满寨瀑布群"
-],
-
-[
-    "黄满寨瀑布群",
-    "京明温泉度假村",
-    "云汤山温泉"
-],
-
-[
-    "云汤山温泉",
-    "大洋国际生态旅游区",
-    "河婆城区"
-]
-]
-
-},
-
-
-
-/* =====================================================
-   美食
-===================================================== */
-
-food: {
-
-
-1:[
-[
-    "河婆城区",
-    "南山村",
-    "元合酱园",
-    "棉湖古镇"
-]
-],
-
-
-2:[
-[
-    "河婆城区",
-    "南山村",
-    "元合酱园",
-    "棉湖古镇"
-],
-
-[
-    "棉湖古镇",
-    "大溪镇",
-    "三山国王祖庙"
-]
-],
-
-
-3:[
-[
-    "河婆城区",
-    "南山村",
-    "元合酱园",
-    "棉湖古镇"
-],
-
-[
-    "棉湖古镇",
-    "大溪镇",
-    "大溪镇·金山清元洞公园"
-],
-
-[
-    "大溪镇",
-    "三山国王祖庙",
-    "京明温泉度假村",
-    "河婆城区"
-]
-]
-
-},
-
-
-
-/* =====================================================
-   骑行 / 小众
-===================================================== */
-
-cycling: {
-
-
-1:[
-[
-    "河婆城区",
-    "火炬村",
-    "南山村",
-    "大溪镇·金山清元洞公园"
-]
-],
-
-
-2:[
-[
-    "河婆城区",
-    "火炬村",
-    "南山村"
-],
-
-[
-    "南山村",
-    "粗坑村",
-    "山湖村",
-    "火炬村"
-]
-],
-
-
-3:[
-[
-    "河婆城区",
-    "火炬村",
-    "南山村"
-],
-
-[
-    "南山村",
-    "粗坑村",
-    "山湖村",
-    "火炬村"
-],
-
-[
-    "火炬村",
-    "大溪镇·金山清元洞公园",
-    "元合酱园",
-    "河婆城区"
-]
-]
-
-}
-
-};
-
-
-
-/* =====================================================
-   10. 路线状态
-===================================================== */
-
 let routeLayers = [];
-
 let routeToken = 0;
-
 let startMarker = null;
-
-let currentProfile =
-    "culture";
-
-
-
-/* =====================================================
-   11. 清除路线
-===================================================== */
+let currentProfile = "culture";
+let customNodes = [];
 
 function clearRoutes() {
-
-
-    routeLayers.forEach(
-
-        layer =>
-            map.removeLayer(layer)
-
-    );
-
-
+    routeLayers.forEach(layer => map.removeLayer(layer));
     routeLayers = [];
-
-
-    if(startMarker) {
-
-        map.removeLayer(
-            startMarker
-        );
-
-        startMarker = null;
-
-    }
-
+    if(startMarker) { map.removeLayer(startMarker); startMarker = null; }
 }
 
-
-
 /* =====================================================
-   12. 游客画像
+   10. 游客画像
 ===================================================== */
-
-function setProfile(
-    profile
-) {
-
-
-    currentProfile =
-        profile;
-
-
-    const buttons = [
-        "b1",
-        "b2",
-        "b3",
-        "b4"
-    ];
-
-
-    buttons.forEach(
-
-        id => {
-
-            document
-                .getElementById(id)
-                .classList
-                .remove("active");
-
-        }
-
-    );
-
-
-    const buttonMap = {
-
-        culture:"b1",
-
-        eco:"b2",
-
-        food:"b3",
-
-        cycling:"b4"
-
-    };
-
-
-    document
-        .getElementById(
-            buttonMap[profile]
-        )
-        .classList
-        .add("active");
-
-
-    const p =
-        profiles[profile];
-
-
-    document.getElementById(
-        "profileInfo"
-    ).innerHTML =
-
-        "<b>当前游客画像：</b>" +
-        p.name +
-
-        "<br>" +
-
-        "<span style='color:#666'>" +
-        p.description +
-        "</span>";
-
-
+function setProfile(profile) {
+    currentProfile = profile;
+    const buttons = ["b1","b2","b3","b4"];
+    buttons.forEach(id => document.getElementById(id).classList.remove("active"));
+    const buttonMap = { culture:"b1", eco:"b2", food:"b3", cycling:"b4" };
+    document.getElementById(buttonMap[profile]).classList.add("active");
+    const p = profiles[profile];
+    document.getElementById("profileInfo").innerHTML = "<b>当前游客画像：</b>" + p.name + "<br><span style='color:#666'>" + p.description + "</span>";
     generateRoute();
-
 }
 
-
-
 /* =====================================================
-   13. 计算两个地点的直线距离
+   11. 工具函数
 ===================================================== */
-
-function distance(
-    a,
-    b
-) {
-
-
-    const lat1 =
-        places[a].coord[0];
-
-    const lon1 =
-        places[a].coord[1];
-
-
-    const lat2 =
-        places[b].coord[0];
-
-    const lon2 =
-        places[b].coord[1];
-
-
-    const R =
-        6371;
-
-
-    const dLat =
-        (lat2-lat1)
-        * Math.PI / 180;
-
-
-    const dLon =
-        (lon2-lon1)
-        * Math.PI / 180;
-
-
-    const x =
-        Math.sin(dLat/2)
-        *
-        Math.sin(dLat/2);
-
-
-    const y =
-        Math.cos(
-            lat1*Math.PI/180
-        )
-        *
-        Math.cos(
-            lat2*Math.PI/180
-        )
-        *
-        Math.sin(dLon/2)
-        *
-        Math.sin(dLon/2);
-
-
-    return R *
-        2 *
-        Math.atan2(
-            Math.sqrt(
-                x+y
-            ),
-            Math.sqrt(
-                1-x-y
-            )
-        );
-
+function distance(a, b) {
+    const lat1 = places[a].coord[0], lon1 = places[a].coord[1];
+    const lat2 = places[b].coord[0], lon2 = places[b].coord[1];
+    const R = 6371;
+    const dLat = (lat2-lat1) * Math.PI / 180;
+    const dLon = (lon2-lon1) * Math.PI / 180;
+    const x = Math.sin(dLat/2) * Math.sin(dLat/2);
+    const y = Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(x+y), Math.sqrt(1-x-y));
 }
 
+function travelMinutes(a,b) { return distance(a,b) * 1.25 / 45 * 60; }
 
-
-/* =====================================================
-   14. 寻找住宿节点
-===================================================== */
-
-function findBestStay(
-    lastPlace,
-    usedPlaces
-) {
-
-
-    const stayPlaces =
-        Object.keys(places)
-        .filter(
-
-            name =>
-
-                places[name].stay &&
-                !usedPlaces.includes(name)
-
-        );
-
-
-    if(
-        stayPlaces.length === 0
-    )
-
-        return null;
-
-
-    let best =
-        stayPlaces[0];
-
-
-    let bestDistance =
-        distance(
-            lastPlace,
-            best
-        );
-
-
-    stayPlaces.forEach(
-
-        name => {
-
-            const d =
-                distance(
-                    lastPlace,
-                    name
-                );
-
-
-            if(d < bestDistance) {
-
-                best =
-                    name;
-
-                bestDistance =
-                    d;
-
-            }
-
-        }
-
-    );
-
-
-    return best;
-
+function visitMinutes(name) {
+    const t = places[name].time || "";
+    if(t.includes("半天")) return 150;
+    if(t.includes("1天")) return 240;
+    const m = t.match(/(\d+)\s*[–\-]\s*(\d+)/);
+    if(m) return Math.round(((parseInt(m[1])+parseInt(m[2]))/2)*60);
+    const single = t.match(/(\d+)/);
+    return single ? parseInt(single[1])*60 : 60;
 }
 
+function scorePlace(name, profileKey) {
+    const p = places[name];
+    const prof = profiles[profileKey];
+    let score = 0;
+    prof.keywords.forEach(k => { if(p.role && p.role.includes(k)) score += 3; });
+    if(p.category === profileKey) score += 2;
+    score += (p.popularity || 0) * 0.6;
+    if(prof.avoidLarge && p.popularity >= 5) score -= 3;
+    if(p.family) score += 0.3;
+    if(profileKey==="culture" && p.category==="eco") score -= 8;
+    if(profileKey==="eco" && p.category==="eco") score += 5;
+    if(profileKey==="food" && p.category==="eco") score -= 3;
+    if(profileKey==="cycling" && p.category==="eco") score -= 2;
+    if(profileKey==="culture" && p.role && p.role.some(r=>["文化节点","非遗节点","民俗节点","红色节点","建筑打卡","宗教节点"].includes(r))) score += 3;
+    if(profileKey==="eco" && p.role && p.role.some(r=>["自然节点","生态节点","核心景点","休闲节点"].includes(r))) score += 2;
+    if(profileKey==="food" && p.role && p.role.some(r=>["美食节点","夜游节点","体验节点","购物节点"].includes(r))) score += 3;
+    if(profileKey==="cycling" && p.role && p.role.some(r=>["乡村节点","小众节点","非遗节点"].includes(r))) score += 3;
+    return score;
+}
 
+function buildCandidates(profileKey, usedSet) {
+    return Object.keys(places)
+        .filter(name => !usedSet.has(name))
+        .filter(name => !(profileKey==="culture" && places[name].category==="eco"))
+        .map(name => ({ name, score: scorePlace(name, profileKey), coord: places[name].coord }))
+        .sort((a,b) => b.score - a.score);
+}
+
+function typeKey(name) { return (places[name].type||"").split("/")[0].trim(); }
+
+const ENTRY_POINTS = ["河婆城区","棉湖古镇"];
+function chooseAutoStart(profileKey, usedSet) {
+    const candidates = buildCandidates(profileKey, usedSet);
+    if(!candidates.length) return "河婆城区";
+    const top = candidates.slice(0, 4);
+    return ENTRY_POINTS.map(entry => {
+        let utility = 0;
+        top.forEach(c => {
+            const d = distance(entry, c.name);
+            utility += c.score / (1 + d);
+        });
+        return { entry, utility };
+    }).sort((a,b) => b.utility - a.utility)[0].entry;
+}
+
+function findOnTheWay(current, next, usedSet, profileKey) {
+    if(!current) return null;
+    const direct = distance(current, next);
+    const list = [];
+    Object.keys(places).forEach(n => {
+        if(usedSet.has(n) || n === next) return;
+        if(profileKey==="culture" && places[n].category==="eco") return;
+        const extra = distance(current, n) + distance(n, next) - direct;
+        if(extra < 4 && scorePlace(n, profileKey) > 4)
+            list.push({ name:n, extra, score: scorePlace(n, profileKey) });
+    });
+    list.sort((a,b) => (b.score - a.score) || (a.extra - b.extra));
+    return list.length ? list[0].name : null;
+}
 
 /* =====================================================
-   15. 根据固定起点调整路线
+   12. 单日路线（支持必须访问节点）
 ===================================================== */
+function buildOneDay(profileKey, startName, usedSet, visitBudgetMin, totalBudgetMin, mustVisit = []) {
+    const day = [];
+    let current = startName || null;
+    let visitUsed = 0;
+    let totalUsed = 0;
+    const typeCount = {};
 
-function adjustRouteForStart(
-    routes,
-    start
-) {
-
-
-    if(!start)
-        return routes;
-
-
-    /*
-     * 如果起点本来就在第一天
-     * 就从这个位置开始
-     */
-
-    for(
-        let d=0;
-        d<routes.length;
-        d++
-    ) {
-
-
-        const route =
-            routes[d];
-
-
-        const index =
-            route.indexOf(start);
-
-
-        if(index >= 0) {
-
-
-            const newRoute =
-                route.slice(index)
-                .concat(
-                    route.slice(
-                        0,
-                        index
-                    )
-                );
-
-
-            const newRoutes =
-                routes.slice();
-
-
-            newRoutes[d] =
-                newRoute;
-
-
-            /*
-             * 如果不是第一天，
-             * 将前面的天移动到后面
-             */
-
-            if(d > 0) {
-
-                const before =
-                    newRoutes.slice(
-                        0,
-                        d
-                    );
-
-                const after =
-                    newRoutes.slice(
-                        d
-                    );
-
-
-                return after.concat(
-                    before
-                );
-
-            }
-
-
-            return newRoutes;
-
-        }
-
+    // 首先处理必须访问的节点（优先安排）
+    const pendingMust = mustVisit.filter(n => !usedSet.has(n) && places[n]);
+    if(startName && places[startName]) {
+        day.push(startName);
+        usedSet.add(startName);
+        current = startName;
     }
 
+    // 按距离排序必须节点（从当前起点出发）
+    const sortedMust = pendingMust.slice().sort((a,b) => {
+        if(!current) return 0;
+        return distance(current, a) - distance(current, b);
+    });
 
-    /*
-     * 如果模板里没有这个起点，
-     * 将起点加入第一天最前面
-     */
+    for(let name of sortedMust) {
+        if(usedSet.has(name)) continue;
+        const travel = current ? travelMinutes(current, name) : 0;
+        const visit = visitMinutes(name);
+        if(visitUsed + visit > visitBudgetMin || totalUsed + visit + travel > totalBudgetMin) continue;
+        day.push(name);
+        usedSet.add(name);
+        visitUsed += visit;
+        totalUsed += visit + travel;
+        typeCount[typeKey(name)] = (typeCount[typeKey(name)] || 0) + 1;
+        current = name;
+    }
 
-    const newRoutes =
-        routes.map(
-            r => r.slice()
-        );
+    // 然后贪心补充其他高分节点
+    while(true) {
+        const candidates = buildCandidates(profileKey, usedSet);
+        if(!candidates.length) break;
 
+        const scored = candidates.map(c => {
+            const travel = current ? travelMinutes(current, c.name) : 0;
+            const visit = visitMinutes(c.name);
+            const typePenalty = (typeCount[typeKey(c.name)] || 0) >= 2 ? 5 : 0;
+            const utility = c.score / (1 + travel / 45) - typePenalty;
+            return { ...c, travel, visit, utility };
+        }).filter(c => visitUsed + c.visit <= visitBudgetMin && totalUsed + c.visit + c.travel <= totalBudgetMin);
 
-    newRoutes[0] =
-        [
-            start,
-            ...newRoutes[0]
-        ];
+        if(!scored.length) break;
+        scored.sort((a,b) => b.utility - a.utility);
+        let chosen = scored[0];
 
-
-    return newRoutes;
-
-}
-
-
-
-/* =====================================================
-   16. 插入住宿节点
-===================================================== */
-
-function ensureOvernightPlaces(
-    routes
-) {
-
-
-    const result =
-        routes.map(
-            r => r.slice()
-        );
-
-
-    const used = [];
-
-
-    result.forEach(
-
-        day => {
-
-            day.forEach(
-                p => used.push(p)
-            );
-
+        if((typeCount[typeKey(chosen.name)] || 0) >= 2) {
+            const alt = scored.find(c => (typeCount[typeKey(c.name)] || 0) < 2);
+            if(alt) chosen = alt;
         }
 
-    );
+        // 检查顺路点
+        if(current) {
+            const onTheWay = findOnTheWay(current, chosen.name, usedSet, profileKey);
+            if(onTheWay) {
+                const ow = scored.find(c => c.name === onTheWay);
+                if(ow && visitUsed + ow.visit <= visitBudgetMin && totalUsed + ow.travel + ow.visit <= totalBudgetMin) {
+                    day.push(onTheWay); usedSet.add(onTheWay);
+                    visitUsed += ow.visit; totalUsed += ow.travel + ow.visit;
+                    typeCount[typeKey(onTheWay)] = (typeCount[typeKey(onTheWay)] || 0) + 1;
+                    current = onTheWay;
+                    continue;
+                }
+            }
+        }
 
+        day.push(chosen.name); usedSet.add(chosen.name);
+        visitUsed += chosen.visit; totalUsed += chosen.visit + chosen.travel;
+        typeCount[typeKey(chosen.name)] = (typeCount[typeKey(chosen.name)] || 0) + 1;
+        current = chosen.name;
 
-    for(
-        let i=0;
-        i<result.length-1;
-        i++
-    ) {
+        if(visitUsed >= visitBudgetMin - 30) break;
+    }
 
+    day._visitMinutes = visitUsed;
+    day._totalMinutes = totalUsed;
+    return day;
+}
 
-        const day =
-            result[i];
+/* =====================================================
+   13. 多日路线生成（支持自定义节点动态重新评估）
+===================================================== */
+function generateDynamicRoutes(profileKey, days, startName, mustVisit = []) {
+    const used = new Set();
+    const routes = [];
+    const visitBudgets = [330, 360, 360];
+    const totalBudgets = [480, 510, 510];
 
+    // 关键：如果提供了固定起点，第一天必须从该起点开始；否则自动选择
+    let currentStart = startName && places[startName] ? startName : chooseAutoStart(profileKey, used);
 
-        const hasStay =
-            day.some(
-                p =>
-                places[p] &&
-                places[p].stay
-            );
+    // 如果用户设定了固定起点，且起点在第一天，则自动加入used并推入day
+    for(let d = 0; d < days; d++) {
+        const isLast = d === days - 1;
+        // 第一天的mustVisit需要传入；后续天也传（确保所有自定义节点被访问）
+        const day = buildOneDay(profileKey, currentStart, used, visitBudgets[d] || 360, totalBudgets[d] || 510, mustVisit);
 
-
-        if(!hasStay) {
-
-
-            const last =
-                day[day.length-1];
-
-
-            const stay =
-                findBestStay(
-                    last,
-                    []
-                );
-
-
-            if(
-                stay &&
-                !day.includes(stay)
-            ) {
-
-                /*
-                 * 将住宿节点作为当天最后一站
-                 */
-
+        if(!isLast && day.length) {
+            const last = day[day.length - 1];
+            const stayCandidates = Object.keys(places).filter(n => places[n].stay && !used.has(n))
+                .map(n => ({ name:n, dist: distance(last, n), score: scorePlace(n, profileKey) }))
+                .sort((a,b) => a.dist - b.dist);
+            if(stayCandidates.length) {
+                const stay = stayCandidates[0].name;
                 day.push(stay);
-
+                used.add(stay);
+                currentStart = stay;
+            } else {
+                currentStart = last;
             }
-
         }
 
+        if(day.length) routes.push(day);
+        else break; // 如果某天无法生成，停止
     }
-
-
-    return result;
-
+    return routes;
 }
 
+/* =====================================================
+   14. 合并自定义节点到路线（保留原逻辑但优化）
+===================================================== */
+function mergeCustomNodes(baseRoutes, customNames, mode, profileKey, days, fixedStart) {
+    if(!customNames.length) return baseRoutes;
 
+    // 仅追加模式：将节点尽可能均匀地追加到各天末尾（不破坏原有顺序）
+    if(mode === "keep") {
+        const result = baseRoutes.map(day => day.slice());
+        // 收集已存在节点
+        const existing = new Set();
+        result.forEach(day => day.forEach(n => existing.add(n)));
+        const toAdd = customNames.filter(n => places[n] && !existing.has(n));
+        // 简单轮询分配（可优化）
+        let dayIdx = 0;
+        toAdd.forEach(name => {
+            // 找到节点最少的一天
+            let minLen = Infinity, minIdx = 0;
+            for(let i = 0; i < result.length; i++) {
+                if(result[i].length < minLen) { minLen = result[i].length; minIdx = i; }
+            }
+            result[minIdx].push(name);
+            existing.add(name);
+        });
+        return result;
+    } else {
+        // 优化模式：将自定义节点作为必须访问节点，完全重新规划
+        // 注意：固定起点优先使用用户设定的，否则沿用原路线第一天起点
+        const used = new Set();
+        const mustVisit = customNames.filter(n => places[n]);
+        // 重新规划，传入mustVisit，起点为fixedStart或原起点
+        const originalStart = fixedStart || (baseRoutes[0] && baseRoutes[0][0]) || null;
+        return generateDynamicRoutes(profileKey, days, originalStart, mustVisit);
+    }
+}
 
 /* =====================================================
-   17. OSRM 道路路线
+   15. OSRM 道路路线绘制（确保穿过所有节点）
 ===================================================== */
-
-async function getRoadRoute(
-    coords,
-    day,
-    color,
-    token
-) {
-
-
-    const coordString =
-        coords
-        .map(
-            p =>
-            p[1] + "," + p[0]
-        )
-        .join(";");
-
-
-    const url =
-
-        "https://router.project-osrm.org/" +
-
-        "route/v1/driving/" +
-
-        coordString +
-
-        "?overview=full&geometries=geojson";
-
+async function getRoadRoute(coords, day, color, token) {
+    // 关键：把坐标从 [lat,lng] 转为 OSRM 需要的 "lng,lat"
+    const coordString = coords.map(p => p[1] + "," + p[0]).join(";");
+    const url = `https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
 
     try {
+        const response = await fetch(url);
+        if(!response.ok) throw new Error("OSRM error");
+        const data = await response.json();
+        if(token !== routeToken) return;
 
-
-        const response =
-            await fetch(url);
-
-
-        if(!response.ok)
-
-            throw new Error(
-                "OSRM error"
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if(
-            token !== routeToken
-        )
-
-            return;
-
-
-        if(
-            data.code === "Ok" &&
-            data.routes.length > 0
-        ) {
-
-
-            const route =
-                data.routes[0];
-
-
-            const latlngs =
-                route
-                .geometry
-                .coordinates
-                .map(
-                    p =>
-                    [
-                        p[1],
-                        p[0]
-                    ]
-                );
-
-
-            const line =
-                L.polyline(
-
-                    latlngs,
-
-                    {
-
-                        color:color,
-
-                        weight:6,
-
-                        opacity:.85
-
-                    }
-
-                ).addTo(map);
-
-
-            line.bindPopup(
-
-                "<b>" +
-                day +
-                "</b><br>" +
-
-                "道路距离：" +
-
-                (
-                    route.distance / 1000
-                ).toFixed(1) +
-
-                " km<br>" +
-
-                "驾车时间：" +
-
-                Math.round(
-                    route.duration / 60
-                ) +
-
-                " 分钟"
-
-            );
-
-
-            routeLayers.push(
-                line
-            );
-
-
+        if(data.code === "Ok" && data.routes.length > 0) {
+            const route = data.routes[0];
+            const latlngs = route.geometry.coordinates.map(p => [p[1], p[0]]);
+            const line = L.polyline(latlngs, { color: color, weight: 6, opacity: .85 }).addTo(map);
+            line.bindPopup(`<b>${day}</b><br>道路距离：${(route.distance/1000).toFixed(1)} km<br>驾车时间：${Math.round(route.duration/60)} 分钟`);
+            routeLayers.push(line);
         } else {
-
-
-            drawFallback(
-                coords,
-                color
-            );
-
+            drawFallback(coords, color);
         }
-
-
     } catch(error) {
-
-
-        drawFallback(
-            coords,
-            color
-        );
-
+        drawFallback(coords, color);
     }
-
 }
 
-
-
-/* =====================================================
-   18. 备用路线
-===================================================== */
-
-function drawFallback(
-    coords,
-    color
-) {
-
-
-    const line =
-        L.polyline(
-
-            coords,
-
-            {
-
-                color:color,
-
-                weight:5,
-
-                opacity:.75,
-
-                dashArray:"8,8"
-
-            }
-
-        ).addTo(map);
-
-
-    routeLayers.push(
-        line
-    );
-
+function drawFallback(coords, color) {
+    const line = L.polyline(coords, { color: color, weight: 5, opacity: .75, dashArray: "8,8" }).addTo(map);
+    routeLayers.push(line);
 }
 
-
-
 /* =====================================================
-   19. 生成路线
+   16. 生成路线（核心）
 ===================================================== */
-
 function generateRoute() {
-
-
     routeToken++;
-
-    const token =
-        routeToken;
-
-
+    const token = routeToken;
     clearRoutes();
 
+    const days = parseInt(document.getElementById("duration").value);
+    const useStart = document.getElementById("useStartPoint").checked;
+    const start = useStart ? document.getElementById("startPoint").value : "";
 
-    const days =
-        parseInt(
-            document.getElementById(
-                "duration"
-            ).value
-        );
-
-
-    let routes =
-        routeTemplates[
-            currentProfile
-        ][days];
-
-
-    if(!routes)
-
+    // 如果勾选了起点但未选择，提示
+    if(useStart && !start) {
+        document.getElementById("routeInfo").innerHTML = "<b>请选择起点</b><br><span style='color:#666'>已勾选“设定固定起点”，但尚未选择具体节点。</span>";
         return;
-
-
-    /*
-     * 复制一份，
-     * 避免直接修改模板
-     */
-
-    routes =
-        routes.map(
-            r => r.slice()
-        );
-
-
-
-    /* =================================================
-       获取固定起点
-    ================================================= */
-
-    const useStart =
-        document.getElementById(
-            "useStartPoint"
-        ).checked;
-
-
-    const start =
-        useStart
-        ? document.getElementById(
-            "startPoint"
-          ).value
-        : "";
-
-
-
-    /* =================================================
-       固定起点调整
-    ================================================= */
-
-    if(start) {
-
-        routes =
-            adjustRouteForStart(
-                routes,
-                start
-            );
-
     }
 
+    // 获取自定义节点列表
+    const mode = document.querySelector('input[name="addMode"]:checked').value;
+    const customNames = customNodes.slice();
 
-
-    /* =================================================
-       多日旅行自动加入住宿
-    ================================================= */
-
-    if(days > 1) {
-
-        routes =
-            ensureOvernightPlaces(
-                routes
-            );
-
-    }
-
-
-
-    /* =================================================
-       起点地图标记
-    ================================================= */
-
-    if(start) {
-
-
-        startMarker =
-            L.marker(
-
-                places[start].coord,
-
-                {
-                    icon:icons.start
-                }
-
-            ).addTo(map);
-
-
-        startMarker.bindPopup(
-
-            "<b>🚩 起始点</b><br>" +
-            start
-
-        );
-
-    }
-
-
-
-    /* =================================================
-       生成文字信息
-    ================================================= */
-
-    let info = "";
-
-
-    info +=
-
-        "<b>" +
-
-        profiles[
-            currentProfile
-        ].name +
-
-        "</b><br>";
-
-
-    info +=
-
-        "旅行计划：";
-
-
-    if(days === 1)
-
-        info += "一天";
-
-
-    if(days === 2)
-
-        info += "两天一夜";
-
-
-    if(days === 3)
-
-        info += "三天两夜";
-
-
-    info += "<br>";
-
-
-
-    /* =================================================
-       起点说明
-    ================================================= */
-
-    if(start) {
-
-
-        info +=
-
-            "<div class='start-info'>" +
-
-            "🚩 <b>固定起点：</b>" +
-
-            start +
-
-            "</div>";
-
+    // 核心：生成基础路线（如果自定义节点存在且模式为优化，则传入mustVisit）
+    let routes;
+    if(customNames.length > 0 && mode === "optimize") {
+        // 优化模式：必须节点传入，且起点可能被重新评估（若未固定起点）
+        const effectiveStart = useStart ? start : null;
+        routes = generateDynamicRoutes(currentProfile, days, effectiveStart, customNames);
     } else {
-
-
-        info +=
-
-            "<div class='start-info'>" +
-
-            "📍 <b>系统自动规划起点</b>" +
-
-            "<br>" +
-
-            "当前路线根据游客画像自动生成。" +
-
-            "</div>";
-
+        // 基础路线（不传入mustVisit），然后再合并自定义节点（仅追加或优化逻辑由merge处理）
+        const baseRoutes = generateDynamicRoutes(currentProfile, days, useStart ? start : null);
+        if(customNames.length > 0) {
+            routes = mergeCustomNodes(baseRoutes, customNames, mode, currentProfile, days, useStart ? start : null);
+        } else {
+            routes = baseRoutes;
+        }
     }
 
+    // 如果固定起点且起点存在，添加起点标记
+    if(useStart && start && places[start]) {
+        startMarker = L.marker(getMapCoord(start), { icon: icons.start }).addTo(map);
+        startMarker.bindPopup("<b>🚩 起始点</b><br>" + start);
+    }
 
+    // 构建信息面板
+    let info = `<b>${profiles[currentProfile].name}</b><br>旅行计划：`;
+    if(days === 1) info += "一天";
+    if(days === 2) info += "两天一夜";
+    if(days === 3) info += "三天两夜";
     info += "<br>";
 
-
-
-    /* =================================================
-       每一天
-    ================================================= */
-
-    routes.forEach(
-
-        (day,index) => {
-
-
-            const dayName =
-                "Day " +
-                (index+1);
-
-
-            info +=
-
-                "<div class='day-box'>" +
-
-                "<div class='day-title'>" +
-
-                dayName +
-
-                "</div>";
-
-
-
-            day.forEach(
-
-                (place,index2) => {
-
-
-                    const p =
-                        places[place];
-
-
-                    let className =
-                        "route-place";
-
-
-                    if(
-                        start === place
-                    )
-
-                        className +=
-                            " start";
-
-
-                    if(p.stay)
-
-                        className +=
-                            " stay";
-
-
-                    info +=
-
-                        "<div class='" +
-                        className +
-                        "'>" +
-
-
-                        "<span class='route-arrow'>" +
-
-                        (
-                            index2 === 0
-                            ? "📍"
-                            : "→"
-                        ) +
-
-                        "</span>" +
-
-
-                        (
-                            index2+1
-                        ) +
-
-                        ". " +
-
-                        place;
-
-
-
-                    if(p.stay) {
-
-
-                        info +=
-
-                            " 🛏";
-
-                    }
-
-
-                    info +=
-
-                        "</div>";
-
-                }
-
-            );
-
-
-
-            /* =================================================
-               住宿
-            ================================================= */
-
-            if(
-                days > 1 &&
-                index < days-1
-            ) {
-
-
-                let overnight =
-                    null;
-
-
-                for(
-                    let i=day.length-1;
-                    i>=0;
-                    i--
-                ) {
-
-
-                    const name =
-                        day[i];
-
-
-                    if(
-                        places[name] &&
-                        places[name].stay
-                    ) {
-
-
-                        overnight =
-                            name;
-
-                        break;
-
-                    }
-
-                }
-
-
-
-                if(overnight) {
-
-
-                    info +=
-
-                        "<div class='overnight'>" +
-
-                        "🛏 <b>推荐过夜：</b>" +
-
-                        overnight +
-
-                        "<br>" +
-
-                        "<span style='font-size:11px;color:#666'>" +
-
-                        "系统将住宿节点作为当天行程结束点，" +
-
-                        "以减少第二天不必要的折返。" +
-
-                        "</span>" +
-
-                        "</div>";
-
-                }
-
+    if(useStart && start) {
+        info += `<div class='start-info'>🚩 <b>固定起点：</b>${start}<br><span style='font-size:11px;color:#666'>起点参与第一天最近邻排序，后续节点按评分与距离动态选择。</span></div>`;
+    } else {
+        // 显示实际自动选择的起点（从routes第一天第一个节点推断）
+        const autoStart = routes.length > 0 && routes[0].length > 0 ? routes[0][0] : "河婆城区";
+        info += `<div class='start-info'>📍 <b>系统自动规划起点：</b>${autoStart}<br><span style='font-size:11px;color:#666'>系统根据游客画像、入口位置和空间距离自动生成稳定路线；自动入口仅为河婆或棉湖。</span></div>`;
+    }
+
+    if(customNodes.length > 0) {
+        info += `<div style='margin-top:8px;padding:6px 8px;background:#e8f0fe;border-radius:6px;font-size:12px;'>📌 已添加节点：${customNodes.join("、")}（模式：${mode === "keep" ? "仅追加" : "优化路线"}）</div>`;
+    }
+    info += "<br>";
+
+    // 遍历输出每一天
+    routes.forEach((day, index) => {
+        const dayName = `Day ${index + 1}`;
+        let totalMin = 0;
+        info += `<div class='day-box'><div class='day-title'>${dayName} · ${day.length} 个节点</div>`;
+
+        day.forEach((place, idx2) => {
+            const p = places[place];
+            if(!p) return;
+            let className = "route-place";
+            if(useStart && start === place) className += " start";
+            if(p.stay) className += " stay";
+            info += `<div class='${className}'><span class='route-arrow'>${idx2 === 0 ? "📍" : "→"}</span>${idx2 + 1}. ${place}`;
+            if(p.stay) info += " 🛏";
+            info += "</div>";
+            totalMin += visitMinutes(place);
+        });
+
+        // 过夜提示
+        if(days > 1 && index < days - 1) {
+            let overnight = null;
+            for(let i = day.length - 1; i >= 0; i--) {
+                const name = day[i];
+                if(places[name] && places[name].stay) { overnight = name; break; }
             }
-
-
-
-            info +=
-
-                "</div>";
-
+            if(overnight) {
+                info += `<div class='overnight'>🛏 <b>推荐过夜：</b>${overnight}<br><span style='font-size:11px;color:#666'>系统将住宿节点作为当天行程结束点，以减少第二天不必要的折返。</span></div>`;
+            }
         }
 
-    );
+        info += `<div style='font-size:11px;color:#888;margin-top:6px'>当日景点游玩约 ${Math.round(totalMin / 60 * 10) / 10} 小时（不含车程）</div></div>`;
+    });
 
+    document.getElementById("routeInfo").innerHTML = info;
 
+    // 绘制路线（使用OSRM，确保穿过所有节点）
+    const colors = ["#b22222", "#1f5f99", "#6a3d9a"];
+    routes.forEach((day, index) => {
+        const coords = day.filter(n => places[n]).map(name => getMapCoord(name));
+        if(coords.length < 2) return;
+        getRoadRoute(coords, `Day ${index + 1}`, colors[index], token);
+    });
 
-    document.getElementById(
-        "routeInfo"
-    ).innerHTML =
-        info;
-
-
-
-    /* =================================================
-       绘制道路路线
-    ================================================= */
-
-    const colors = [
-
-        "#b22222",
-
-        "#1f5f99",
-
-        "#6a3d9a"
-
-    ];
-
-
-    routes.forEach(
-
-        (day,index) => {
-
-
-            const coords =
-                day.map(
-
-                    name =>
-                    places[name].coord
-
-                );
-
-
-            getRoadRoute(
-
-                coords,
-
-                "Day " +
-                (index+1),
-
-                colors[index],
-
-                token
-
-            );
-
-        }
-
-    );
-
-
-
-    /* =================================================
-       自动缩放
-    ================================================= */
-
+    // 调整地图视野
     const all = [];
-
-
-    routes.forEach(
-
-        day => {
-
-            day.forEach(
-
-                name => {
-
-                    if(
-                        places[name]
-                    ) {
-
-                        all.push(
-                            places[name].coord
-                        );
-
-                    }
-
-                }
-
-            );
-
-        }
-
-    );
-
-
-
-    if(
-        start &&
-        places[start]
-    ) {
-
-        all.push(
-            places[start].coord
-        );
-
-    }
-
-
-
-    if(all.length > 0) {
-
-
-        map.fitBounds(
-
-            all,
-
-            {
-
-                padding:[
-                    50,
-                    50
-                ]
-
-            }
-
-        );
-
-    }
-
+    routes.forEach(day => day.forEach(name => { if(places[name]) all.push(getMapCoord(name)); }));
+    if(all.length > 0) map.fitBounds(all, { padding: [50, 50] });
 }
 
+/* =====================================================
+   17. 自定义节点管理
+===================================================== */
+function addCustomNode() {
+    const select = document.getElementById("addNodeSelect");
+    const name = select.value;
+    if(!name || !places[name]) return alert("请选择一个有效节点");
+    if(customNodes.includes(name)) return alert("该节点已在列表中");
+    customNodes.push(name);
+    renderCustomNodes();
+    // 自动触发重新生成（会重新评估起点和路线）
+    generateRoute();
+    select.value = "";
+}
 
+function removeCustomNode(name) {
+    customNodes = customNodes.filter(n => n !== name);
+    renderCustomNodes();
+    generateRoute();
+}
+
+function renderCustomNodes() {
+    const container = document.getElementById("customNodesList");
+    if(customNodes.length === 0) {
+        container.innerHTML = "<span style='color:#999;'>暂无手动添加的节点</span>";
+        return;
+    }
+    container.innerHTML = customNodes.map(name =>
+        `<span class="tag-node">${name} <button onclick="removeCustomNode('${name}')">✕</button></span>`
+    ).join("");
+}
 
 /* =====================================================
-   20. 初始化
+   18. 初始化
 ===================================================== */
-
-setProfile(
-    "culture"
-);
-
+setProfile("culture");
+renderCustomNodes();
 </script>
-
-
 </body>
-
 </html>
